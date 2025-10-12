@@ -2,6 +2,7 @@
 import signal
 from datetime import datetime
 from modules.rss_curator import RSSCuratorRunner
+from modules.reddit_curator import RedditCuratorRunner
 from modules.helper import wait_for_next_cycle, signal_handler, get_shutdown_requested, logger
 
 # =============================================================================
@@ -22,6 +23,18 @@ RSS_FEED_URLS = [
     "https://blog.google/technology/ai/rss/"
 ]
 
+# Reddit Configuration
+REDDIT_SUBREDDITS = [
+    "ProductivityApps",
+    "artificial",
+    "ChatGPT",
+    "OpenAI",
+]
+
+# Reddit API Configuration
+REDDIT_MAX_POSTS_PER_SUBREDDIT = 5
+REDDIT_TIME_FILTER = "day"  # Options: "hour", "day", "week", "month", "year", "all"
+
 
 def main():
     """Main entry point."""
@@ -33,18 +46,32 @@ def main():
         while not get_shutdown_requested():
             logger.info("🔄 Starting new curation cycle...")
             
-            # Create a new runner instance for each cycle
+            # Create RSS curator runner
             logger.info("📦 Creating RSS curator runner...")
-            runner = RSSCuratorRunner(
+            rss_runner = RSSCuratorRunner(
                 service_account_path=SERVICE_ACCOUNT_PATH,
                 max_items_per_feed=MAX_ITEMS_PER_FEED,
                 feed_urls=RSS_FEED_URLS
             )
             
-            # Run curation cycle once
-            logger.info("▶️  Starting curation cycle...")
-            runner.start()
-            logger.info("✅ Curation cycle completed")
+            # Run RSS curation cycle
+            logger.info("▶️  Starting RSS curation cycle...")
+            rss_runner.start()
+            logger.info("✅ RSS curation cycle completed")
+            
+            # Create Reddit curator runner
+            logger.info("📦 Creating Reddit curator runner...")
+            reddit_runner = RedditCuratorRunner(
+                service_account_path=SERVICE_ACCOUNT_PATH,
+                max_posts_per_subreddit=REDDIT_MAX_POSTS_PER_SUBREDDIT,
+                time_filter=REDDIT_TIME_FILTER,
+                subreddit_names=REDDIT_SUBREDDITS
+            )
+            
+            # Run Reddit curation cycle
+            logger.info("▶️  Starting Reddit curation cycle...")
+            reddit_runner.start()
+            logger.info("✅ Reddit curation cycle completed")
             
             # Check if shutdown was requested during the cycle
             if get_shutdown_requested():
