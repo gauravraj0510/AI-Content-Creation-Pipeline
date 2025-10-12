@@ -6,9 +6,13 @@ This module contains utility functions for timing, logging, and other common ope
 
 import time
 import logging
-import signal
 import sys
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # Global flag for graceful shutdown

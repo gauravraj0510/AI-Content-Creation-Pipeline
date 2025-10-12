@@ -1,16 +1,8 @@
 #!/usr/bin/env python3
-import logging
 import signal
 from datetime import datetime
 from modules.rss_curator import RSSCuratorRunner
-from modules.helper import wait_for_next_cycle, signal_handler, get_shutdown_requested
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+from modules.helper import wait_for_next_cycle, signal_handler, get_shutdown_requested, logger
 
 # =============================================================================
 # GLOBAL CONFIGURATION VARIABLES
@@ -21,12 +13,13 @@ INTERVAL_SECONDS = 3600  # 1 hour = 3600 seconds
 
 # RSS Curator Configuration
 SERVICE_ACCOUNT_PATH = "service_account.json"
-MAX_ITEMS_PER_FEED = 20
+MAX_ITEMS_PER_FEED = 5
 
 # RSS Feed URLs
 RSS_FEED_URLS = [
-    "https://blog.google/technology/ai/rss/",      # Google AI Blog
-    "https://openai.com/blog/rss.xml",             # OpenAI Blog
+    "https://techcrunch.com/category/artificial-intelligence/feed/",
+    "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+    "https://blog.google/technology/ai/rss/"
 ]
 
 
