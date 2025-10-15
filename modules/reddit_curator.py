@@ -269,6 +269,7 @@ class RedditPostCurator:
             "word_count": word_count,
             "reading_time_minutes": reading_time_minutes,
             "content_hash": content_hash,
+            "human_approved": False,
             "metadata": {
                 "reddit_post": {
                     "subreddit": subreddit_name,

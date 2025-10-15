@@ -212,6 +212,7 @@ class RSSFeedCurator:
             "source_name": f"RSS Feed - {domain}",
             "tags": entry.get('tags', []),
             "content_hash": content_hash,
+            "human_approved": False,
             "created_at": datetime.now(timezone.utc),
             "processed_at": datetime.now(timezone.utc)
         }
