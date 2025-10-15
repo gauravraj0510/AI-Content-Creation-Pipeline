@@ -72,14 +72,14 @@ Your `service_account.json` file is already configured and ready to use. The scr
 The script creates two collections in your Firestore database:
 
 - **`RAW_IDEAS`**: Stores the actual content from all sources
-- **`FEED_METADATA`**: Tracks processing metadata for each source
+- **`RSS_METADATA`**: Tracks processing metadata for each source
 
 ## 🔧 How It Works
 
 ### Current RSS Processing
 
 1. **Content Hashing**: Each RSS item gets a unique hash based on title, link, and description
-2. **Timestamp Tracking**: Each feed's last processed timestamp is stored in `FEED_METADATA`
+2. **Timestamp Tracking**: Each feed's last processed timestamp is stored in `RSS_METADATA`
 3. **Incremental Processing**: Only items newer than the last processed timestamp are considered
 4. **Duplicate Prevention**: Content hash prevents storing duplicate items
 

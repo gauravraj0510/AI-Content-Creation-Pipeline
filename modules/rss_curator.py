@@ -36,7 +36,7 @@ from pathlib import Path
 # Firestore Configuration
 DEFAULT_SERVICE_ACCOUNT_PATH = "service_account.json"
 DEFAULT_COLLECTION_NAME = "RAW_IDEAS"
-DEFAULT_FEED_METADATA_COLLECTION = "FEED_METADATA"
+DEFAULT_RSS_METADATA_COLLECTION = "RSS_METADATA"
 
 # RSS Processing Configuration
 DEFAULT_MAX_ITEMS_PER_FEED = 20
@@ -62,7 +62,7 @@ class RSSFeedCurator:
         self.service_account_path = service_account_path or DEFAULT_SERVICE_ACCOUNT_PATH
         self.db = None
         self.collection_name = DEFAULT_COLLECTION_NAME
-        self.feed_metadata_collection = DEFAULT_FEED_METADATA_COLLECTION
+        self.RSS_METADATA_collection = DEFAULT_RSS_METADATA_COLLECTION
         self.max_items_per_feed = max_items_per_feed or DEFAULT_MAX_ITEMS_PER_FEED
         self.running = True
         self._initialize_firestore()
@@ -88,10 +88,10 @@ class RSSFeedCurator:
         content_string = f"{title}|{link}|{description}"
         return hashlib.md5(content_string.encode('utf-8')).hexdigest()
     
-    def _get_feed_metadata(self, feed_url: str) -> Dict[str, Any]:
+    def _get_RSS_METADATA(self, feed_url: str) -> Dict[str, Any]:
         """Get metadata for a feed including last processed timestamp."""
         try:
-            doc_ref = self.db.collection(self.feed_metadata_collection).document(
+            doc_ref = self.db.collection(self.RSS_METADATA_collection).document(
                 self._generate_content_hash(feed_url, "", "")
             )
             doc = doc_ref.get()
@@ -120,10 +120,10 @@ class RSSFeedCurator:
                 "last_updated": datetime.now(timezone.utc)
             }
     
-    def _update_feed_metadata(self, feed_url: str, last_processed: datetime, items_processed: int):
+    def _update_RSS_METADATA(self, feed_url: str, last_processed: datetime, items_processed: int):
         """Update feed metadata with latest processing information."""
         try:
-            doc_ref = self.db.collection(self.feed_metadata_collection).document(
+            doc_ref = self.db.collection(self.RSS_METADATA_collection).document(
                 self._generate_content_hash(feed_url, "", "")
             )
             
@@ -240,7 +240,7 @@ class RSSFeedCurator:
         
         try:
             # Get feed metadata
-            metadata = self._get_feed_metadata(feed_url)
+            metadata = self._get_RSS_METADATA(feed_url)
             last_processed = metadata.get('last_processed')
             
             # Parse the RSS feed
@@ -297,7 +297,7 @@ class RSSFeedCurator:
             
             # Update feed metadata
             if new_items_count > 0 or latest_processed_date != last_processed:
-                self._update_feed_metadata(feed_url, latest_processed_date, new_items_count)
+                self._update_RSS_METADATA(feed_url, latest_processed_date, new_items_count)
             
             # Summary
             logger.info("   ┌─ FEED SUMMARY:")
@@ -362,9 +362,9 @@ class RSSFeedCurator:
         """Get statistics about processed feeds and content."""
         try:
             # Get feed metadata
-            feed_metadata = self.db.collection(self.feed_metadata_collection).get()
-            total_feeds = len(feed_metadata)
-            total_processed_items = sum(doc.to_dict().get('total_items_processed', 0) for doc in feed_metadata)
+            RSS_METADATA = self.db.collection(self.RSS_METADATA_collection).get()
+            total_feeds = len(RSS_METADATA)
+            total_processed_items = sum(doc.to_dict().get('total_items_processed', 0) for doc in RSS_METADATA)
             
             # Get content statistics
             content_docs = self.db.collection(self.collection_name).get()

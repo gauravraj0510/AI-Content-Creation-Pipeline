@@ -18,22 +18,19 @@ MAX_ITEMS_PER_FEED = 5
 
 # RSS Feed URLs
 RSS_FEED_URLS = [
-    "https://techcrunch.com/category/artificial-intelligence/feed/",
-    "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
-    "https://blog.google/technology/ai/rss/"
+    # "https://techcrunch.com/category/artificial-intelligence/feed/",
+    # "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
 ]
 
 # Reddit Configuration
 REDDIT_SUBREDDITS = [
-    "ProductivityApps",
-    "artificial",
-    "ChatGPT",
-    "OpenAI",
+    "AI_Agents",
+    # "Marketresearch",
 ]
 
 # Reddit API Configuration
 REDDIT_MAX_POSTS_PER_SUBREDDIT = 5
-REDDIT_TIME_FILTER = "day"  # Options: "hour", "day", "week", "month", "year", "all"
+REDDIT_TIME_FILTER = "hour"  # Options: "hour", "day", "week", "month", "year", "all"
 
 
 def main():
