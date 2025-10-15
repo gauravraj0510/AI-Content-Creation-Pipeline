@@ -1,58 +1,44 @@
-# AI Content Automation - Multi-Source Content Curator
+# AI Content Creation Pipeline
 
-A comprehensive Python application that fetches content from multiple sources and stores it in Firestore, designed specifically for curating leads for content creation. Features a clean modular architecture with support for RSS feeds, web scraping, and social media post fetching.
+A comprehensive Python application that automatically curates content from multiple sources (RSS feeds and Reddit) and stores it in Firestore with AI-powered relevance scoring. Designed specifically for content creators and AI influencers to discover trending topics and high-quality content leads.
 
 ## 🚀 Features
 
-### Current Implementation
-- ✅ **RSS Feed Processing**: Fetch and process RSS feeds with duplicate prevention
-- ✅ **Modular Architecture**: Clean separation between timing logic and content processing
-- ✅ **Global Configuration**: Easy-to-modify global variables for all settings
-- ✅ **Customizable Intervals**: Run every minute, hour, or any custom time
-- ✅ **Continuous Operation**: Runs until terminated with Ctrl+C
-- ✅ **Duplicate Prevention**: Only stores new content, never re-processes existing items
-- ✅ **Incremental Updates**: Tracks last processed timestamp for each feed
-- ✅ **Firestore Integration**: Uses your service account for secure database access
-- ✅ **Graceful Shutdown**: Handles Ctrl+C and system signals properly
-- ✅ **Comprehensive Logging**: Detailed logging for monitoring and debugging
-- ✅ **Easy Configuration**: No CLI arguments needed, just edit global variables
+### ✅ **Currently Implemented**
+- **RSS Feed Processing**: Fetch and process RSS feeds with duplicate prevention
+- **Reddit Integration**: Fetch posts from multiple subreddits using Reddit API
+- **AI Relevance Scoring**: Google Gemini LLM evaluates content relevance (0-100 score)
+- **Firestore Integration**: Centralized database storage with metadata tracking
+- **Configuration Management**: Dynamic configuration via Firestore and environment variables
+- **Rate Limiting**: Built-in API rate limiting for free tier compliance
+- **Duplicate Prevention**: Smart content hashing prevents duplicate storage
+- **Modular Architecture**: Clean separation of concerns with reusable modules
+- **Comprehensive Logging**: Detailed logging for monitoring and debugging
+- **Graceful Shutdown**: Handles Ctrl+C and system signals properly
 
-### Future Roadmap
-- 🔄 **Web Scraping**: Custom scrapers for specific websites (no generic solution)
-- 🔄 **Reddit Integration**: Fetch posts and comments from Reddit subreddits
-- 🔄 **X (Twitter) Integration**: Collect tweets and threads from X/Twitter
-- 🔄 **Content Analysis**: AI-powered sentiment analysis and topic extraction
-- 🔄 **Multi-format Support**: Handle videos, images, and audio content
-- 🔄 **Advanced Filtering**: Smart content filtering based on relevance and quality
+### 🔄 **Future Roadmap**
+- **X (Twitter) Integration**: Collect tweets and threads from X/Twitter
+- **Content Analysis**: Advanced AI-powered sentiment analysis and topic extraction
+- **Multi-format Support**: Handle videos, images, and audio content
+- **Advanced Filtering**: Smart content filtering based on relevance and quality
+- **Web Scraping**: Custom scrapers for specific websites
 
 ## 📁 Project Structure
 
 ```
-AI Content Automation/
-├── main.py                    # Main entry point with timing logic
+AI Content Creation Pipeline/
+├── main.py                           # Main entry point with configuration
 ├── modules/
-│   ├── __init__.py           # Package initialization and exports
-│   ├── rss_curator.py        # RSS feed processing module
-│   └── helper.py             # Utility functions (timing, signals, etc.)
-├── service_account.json      # Firebase service account credentials
-├── requirements.txt          # Python dependencies
-└── README.md                # This documentation
-```
-
-### Future Module Structure
-```
-modules/
-├── __init__.py
-├── rss_curator.py           # RSS feed processing (current)
-├── web_scrapers/            # Custom web scrapers (future)
-│   ├── __init__.py
-│   ├── techcrunch_scraper.py
-│   ├── venturebeat_scraper.py
-│   └── custom_site_scraper.py
-├── reddit_curator.py        # Reddit post fetching (future)
-├── twitter_curator.py       # X/Twitter integration (future)
-├── content_analyzer.py      # AI content analysis (future)
-└── helper.py                # Shared utilities
+│   ├── __init__.py                   # Package initialization
+│   ├── config_manager.py             # Centralized configuration management
+│   ├── rss_curator.py                # RSS feed processing module
+│   ├── reddit_curator.py             # Reddit post processing module
+│   ├── relevance_scorer.py           # AI relevance scoring with Gemini
+│   └── helper.py                     # Utility functions (timing, signals, etc.)
+├── service_account.json              # Firebase service account credentials
+├── requirements.txt                  # Python dependencies
+├── env_template.txt                  # Environment variables template
+└── README.md                         # This documentation
 ```
 
 ## 🛠️ Setup
@@ -63,336 +49,282 @@ modules/
 pip install -r requirements.txt
 ```
 
-### 2. Service Account Configuration
+### 2. Environment Configuration
 
-Your `service_account.json` file is already configured and ready to use. The script will automatically connect to your Firestore database using this service account.
+Create a `.env` file from the template:
 
-### 3. Firestore Collections
+```bash
+cp env_template.txt .env
+```
 
-The script creates two collections in your Firestore database:
+Edit `.env` with your API keys:
 
-- **`RAW_IDEAS`**: Stores the actual content from all sources
-- **`RSS_METADATA`**: Tracks processing metadata for each source
+```bash
+# Gemini AI API Key (for relevance scoring)
+GEMINI_API_KEY=your_gemini_api_key_here
 
-## 🔧 How It Works
+# Reddit API Credentials
+REDDIT_CLIENT_ID=your_reddit_client_id_here
+REDDIT_CLIENT_SECRET=your_reddit_client_secret_here
+REDDIT_USER_AGENT=AI Content Creation Pipeline v1.0
+```
 
-### Current RSS Processing
+### 3. Firebase Configuration
 
-1. **Content Hashing**: Each RSS item gets a unique hash based on title, link, and description
-2. **Timestamp Tracking**: Each feed's last processed timestamp is stored in `RSS_METADATA`
-3. **Incremental Processing**: Only items newer than the last processed timestamp are considered
-4. **Duplicate Prevention**: Content hash prevents storing duplicate items
+Ensure your `service_account.json` file is in the project root. This file contains your Firebase credentials for Firestore access.
 
-### Future Multi-Source Processing
+### 4. Run Migration (Optional)
 
-The modular architecture is designed to support multiple content sources:
+Migrate hardcoded configurations to Firestore:
 
-1. **RSS Feeds** (Current): Standard RSS/Atom feed processing
-2. **Web Scraping** (Future): Custom scrapers for specific websites (no generic solution)
-3. **Reddit Posts** (Future): Fetch posts and comments from subreddits
-4. **X/Twitter** (Future): Collect tweets and threads
-5. **Content Analysis** (Future): AI-powered analysis and categorization
+```bash
+python migrate_to_firestore.py
+```
 
-### ⚠️ Important Note About Web Scraping
+### 5. Start the Pipeline
 
-**Web scraping requires custom functions for each website** because:
-- Each website has a unique HTML structure and CSS selectors
-- Different sites use different content layouts and navigation patterns
-- Some sites require JavaScript rendering (Selenium) while others work with static HTML (BeautifulSoup)
-- Rate limiting, authentication, and anti-bot measures vary by site
-- **No generic function can handle all websites** - each site needs its own custom scraper
+```bash
+python main.py
+```
 
-## 📋 Standardized JSON Format Specification
+## 🔧 Configuration
 
-This section defines the standardized JSON format for content stored in the `RAW_IDEAS` collection. This format is designed to be extensible for RSS feeds, web scraping, and social media content.
+### **Main Configuration (`main.py`)**
 
-### Core Content Schema
+```python
+# Timing Configuration
+INTERVAL_SECONDS = 3600  # 1 hour = 3600 seconds
+
+# RSS Curator Configuration
+SERVICE_ACCOUNT_PATH = "service_account.json"
+MAX_ITEMS_PER_FEED = 3
+
+# Reddit API Configuration
+REDDIT_MAX_POSTS_PER_SUBREDDIT = 3
+REDDIT_TIME_FILTER = "hour"  # Options: "hour", "day", "week", "month", "year", "all"
+
+# Gemini AI Configuration
+ENABLE_RELEVANCE_SCORING = True  # Set to False to disable AI relevance scoring
+```
+
+### **Firestore Configuration**
+
+The system uses two Firestore collections:
+
+#### **SETTINGS Collection**
+- **PROMPTS Document**: Contains `relevance_score_system_prompt` for AI evaluation
+- **SOURCES Document**: Contains `rss_feed_urls` and `reddit_subreddits` arrays
+
+#### **RAW_IDEAS Collection**
+Stores all curated content with relevance scores and metadata.
+
+## 🧠 AI Relevance Scoring
+
+### **How It Works**
+1. **Content Evaluation**: Each piece of content is sent to Google Gemini LLM
+2. **Scoring Criteria**: 4 key factors (25 points each):
+   - **AI/Tech Relevance**: Direct connection to AI, ML, or emerging tech
+   - **Engagement Potential**: Controversial topics, tutorials, trending content
+   - **Content Creation Value**: Clear narrative, visual opportunities, educational potential
+   - **Audience Interest**: Broad appeal, beginner-friendly, industry impact
+3. **Score Range**: 0-100 (higher = more relevant for AI influencers)
+4. **Rate Limiting**: 35-second delays between API calls (free tier: 2 requests/minute)
+
+### **Scoring Guidelines**
+- **90-100**: Exceptional content with viral potential
+- **80-89**: High-quality content with strong engagement
+- **70-79**: Good content with solid value
+- **60-69**: Decent content with some potential
+- **50-59**: Average content, may work with good presentation
+- **Below 50**: Poor content, limited value
+- **-1**: API failure (easy to detect in code)
+
+## 📊 Content Storage Format
+
+### **Standardized JSON Schema**
 
 ```json
 {
   "id": "a1b2c3d4e5f6789012345678901234567890abcd",
-  "title": "The Future of AI in Content Creation: A Comprehensive Guide",
+  "title": "The Future of AI in Content Creation",
   "link": "https://example.com/articles/future-ai-content-creation",
-  "description": "Explore how artificial intelligence is revolutionizing content creation, from automated writing to personalized marketing campaigns. This comprehensive guide covers the latest trends, tools, and strategies.",
-  "content": "Full article content here... (optional, for web scraping)",
+  "description": "Explore how AI is revolutionizing content creation...",
+  "content": "Full content text...",
   "published": "2024-01-15T14:30:00Z",
   "author": "John Smith",
   "source_type": "rss_feed",
   "source_url": "https://example.com/feed.xml",
   "source_domain": "example.com",
-  "source_name": "Tech Blog",
-  "tags": ["AI", "Content Creation", "Marketing", "Technology"],
-  "categories": ["Technology", "Business"],
-  "language": "en",
-  "word_count": 1250,
-  "reading_time_minutes": 5,
+  "source_name": "Tech Blog RSS",
+  "tags": ["AI", "Content Creation", "Technology"],
   "content_hash": "a1b2c3d4e5f6789012345678901234567890abcd",
-  "metadata": {
-    "rss_feed": {
-      "feed_title": "Tech Blog RSS",
-      "feed_description": "Latest technology news and insights",
-      "feed_language": "en"
-    }
+  
+  // AI Relevance Scoring
+  "relevance_score": 85,
+  "is_relevant": true,
+  "evaluation_timestamp": "2024-01-15T14:35:00Z",
+  "evaluation_model": "gemini-2.5-pro",
+  "evaluation_criteria": {
+    "min_score_threshold": 0,
+    "content_length": 1250,
+    "source_type": "rss_feed"
   },
-  "media": {
-    "images": [
-      {
-        "url": "https://example.com/images/ai-content-creation.jpg",
-        "alt_text": "AI content creation illustration",
-        "caption": "AI tools transforming content creation"
-      }
-    ],
-    "videos": [],
-    "audio": []
-  },
-  "engagement": {
-    "likes": 0,
-    "shares": 0,
-    "comments": 0,
-    "views": 0
-  },
-  "seo": {
-    "meta_title": "Future of AI in Content Creation | Tech Blog",
-    "meta_description": "Discover how AI is transforming content creation...",
-    "keywords": ["AI", "content creation", "marketing automation"],
-    "canonical_url": "https://example.com/articles/future-ai-content-creation"
-  },
-  "technical": {
-    "content_type": "article",
-    "format": "html",
-    "encoding": "utf-8",
-    "last_modified": "2024-01-15T14:30:00Z"
-  },
+  
   "created_at": "2024-01-15T14:35:00Z",
-  "processed_at": "2024-01-15T14:35:00Z",
-  "updated_at": "2024-01-15T14:35:00Z"
+  "processed_at": "2024-01-15T14:35:00Z"
 }
 ```
 
-### Field Descriptions
+### **Source-Specific Formats**
 
-#### Required Fields
-- **`id`**: Unique identifier (MD5 hash of title + link + description)
-- **`title`**: Article/Content title
-- **`link`**: URL to the original content
-- **`description`**: Summary or excerpt of the content
-- **`published`**: Publication date in ISO 8601 format
-- **`source_type`**: Type of source (`rss_feed`, `web_scraping`, `reddit_post`, `twitter_post`, etc.)
-- **`source_url`**: URL of the source (RSS feed, website, Reddit post, etc.)
-- **`source_domain`**: Domain name of the source
-- **`content_hash`**: Hash for duplicate detection
-- **`created_at`**: When the record was created
-- **`processed_at`**: When the record was last processed
-
-#### Optional Fields
-- **`content`**: Full article content (for web scraping)
-- **`author`**: Author name
-- **`source_name`**: Human-readable source name
-- **`tags`**: Array of relevant tags
-- **`categories`**: Array of content categories
-- **`language`**: Content language (ISO 639-1 code)
-- **`word_count`**: Estimated word count
-- **`reading_time_minutes`**: Estimated reading time
-- **`metadata`**: Source-specific metadata
-- **`media`**: Associated media files
-- **`engagement`**: Social engagement metrics
-- **`seo`**: SEO-related information
-- **`technical`**: Technical content information
-- **`updated_at`**: Last update timestamp
-
-### Source-Specific Extensions
-
-#### RSS Feed Format (Current)
+#### **RSS Feed Content**
 ```json
 {
-  "id": "a1b2c3d4e5f6789012345678901234567890abcd",
-  "title": "Breaking: New AI Model Released",
-  "link": "https://example.com/ai-model-release",
-  "description": "OpenAI announces the release of their latest AI model...",
-  "published": "2024-01-15T14:30:00Z",
-  "author": "Tech Reporter",
   "source_type": "rss_feed",
-  "source_url": "https://example.com/feed.xml",
-  "source_domain": "example.com",
-  "source_name": "Tech News RSS",
-  "tags": ["AI", "OpenAI", "Technology"],
-  "content_hash": "a1b2c3d4e5f6789012345678901234567890abcd",
+  "source_name": "RSS Feed - techcrunch.com",
   "metadata": {
     "rss_feed": {
-      "feed_title": "Tech News",
-      "feed_description": "Latest technology news",
-      "feed_language": "en"
+      "feed_title": "TechCrunch AI",
+      "feed_description": "Latest AI news from TechCrunch"
     }
-  },
-  "created_at": "2024-01-15T14:35:00Z",
-  "processed_at": "2024-01-15T14:35:00Z"
+  }
 }
 ```
 
-#### Web Scraping Format (Future - Custom Scrapers Required)
+#### **Reddit Post Content**
 ```json
 {
-  "id": "a1b2c3d4e5f6789012345678901234567890abcd",
-  "title": "Web Scraped Article Title",
-  "link": "https://example.com/article",
-  "description": "Article summary extracted from meta tags...",
-  "content": "Full article content extracted from HTML...",
-  "published": "2024-01-15T14:30:00Z",
-  "author": "Article Author",
-  "source_type": "web_scraping",
-  "source_url": "https://example.com/article",
-  "source_domain": "example.com",
-  "source_name": "Example Blog",
-  "tags": ["Technology", "AI"],
-  "word_count": 1250,
-  "reading_time_minutes": 5,
-  "content_hash": "a1b2c3d4e5f6789012345678901234567890abcd",
-  "web_scraping": {
-    "scraped_at": "2024-01-15T14:35:00Z",
-    "scraper_version": "1.0.0",
-    "scraper_name": "techcrunch_scraper",  // Custom scraper used
-    "scraping_method": "beautifulsoup",
-    "site_specific_selectors": {
-      "title": "h1.post-title",
-      "content": ".article-content",
-      "author": ".author-name"
-    },
-    "raw_html": "<html>...</html>",
-    "extraction_confidence": 0.95
-  },
-  "content_analysis": {
-    "sentiment": "positive",
-    "sentiment_score": 0.8,
-    "topics": ["AI", "Technology", "Innovation"],
-    "entities": [
-      {"text": "OpenAI", "type": "ORGANIZATION"},
-      {"text": "GPT-4", "type": "PRODUCT"}
-    ],
-    "keywords": ["artificial intelligence", "content creation", "automation"]
-  },
-  "created_at": "2024-01-15T14:35:00Z",
-  "processed_at": "2024-01-15T14:35:00Z"
-}
-```
-
-#### Reddit Post Format (Future)
-```json
-{
-  "id": "a1b2c3d4e5f6789012345678901234567890abcd",
-  "title": "What do you think about the new AI developments?",
-  "link": "https://reddit.com/r/MachineLearning/comments/abc123",
-  "description": "User post about AI developments with community discussion...",
-  "content": "Full post content and top comments...",
-  "published": "2024-01-15T14:30:00Z",
-  "author": "reddit_user_123",
   "source_type": "reddit_post",
-  "source_url": "https://reddit.com/r/MachineLearning/comments/abc123",
-  "source_domain": "reddit.com",
-  "source_name": "r/MachineLearning",
-  "tags": ["AI", "Machine Learning", "Discussion"],
-  "content_hash": "a1b2c3d4e5f6789012345678901234567890abcd",
+  "source_name": "r/AI_Agents",
   "reddit_metadata": {
-    "subreddit": "MachineLearning",
+    "subreddit": "AI_Agents",
     "post_id": "abc123",
     "score": 1250,
     "upvote_ratio": 0.95,
     "num_comments": 45,
-    "flair": "Discussion",
-    "awards": ["Gold", "Silver"],
-    "scraped_at": "2024-01-15T14:35:00Z"
-  },
-  "engagement": {
-    "likes": 1250,
-    "shares": 0,
-    "comments": 45,
-    "views": 0
-  },
-  "created_at": "2024-01-15T14:35:00Z",
-  "processed_at": "2024-01-15T14:35:00Z"
+    "is_self": true,
+    "url": "https://reddit.com/r/AI_Agents/comments/abc123"
+  }
 }
 ```
 
-#### X/Twitter Post Format (Future)
-```json
-{
-  "id": "a1b2c3d4e5f6789012345678901234567890abcd",
-  "title": "Exciting news about AI developments! 🚀",
-  "link": "https://twitter.com/OpenAI/status/1234567890",
-  "description": "Tweet about new AI model release with community reactions...",
-  "content": "Full tweet content and thread replies...",
-  "published": "2024-01-15T14:30:00Z",
-  "author": "OpenAI",
-  "source_type": "twitter_post",
-  "source_url": "https://twitter.com/OpenAI/status/1234567890",
-  "source_domain": "twitter.com",
-  "source_name": "@OpenAI",
-  "tags": ["AI", "OpenAI", "Technology"],
-  "content_hash": "a1b2c3d4e5f6789012345678901234567890abcd",
-  "twitter_metadata": {
-    "tweet_id": "1234567890",
-    "user_id": "OpenAI",
-    "retweet_count": 2500,
-    "favorite_count": 8500,
-    "reply_count": 150,
-    "quote_count": 300,
-    "is_retweet": false,
-    "is_quote_tweet": false,
-    "has_media": true,
-    "media_types": ["image"],
-    "scraped_at": "2024-01-15T14:35:00Z"
-  },
-  "engagement": {
-    "likes": 8500,
-    "shares": 2500,
-    "comments": 150,
-    "views": 0
-  },
-  "created_at": "2024-01-15T14:35:00Z",
-  "processed_at": "2024-01-15T14:35:00Z"
-}
+## 🔄 How It Works
+
+### **Content Processing Flow**
+
+1. **Configuration Loading**: ConfigManager loads settings from Firestore and environment variables
+2. **RSS Processing**: Fetches latest items from configured RSS feeds
+3. **Reddit Processing**: Fetches latest posts from configured subreddits
+4. **AI Evaluation**: Each content piece gets scored by Gemini LLM
+5. **Storage**: Content stored in Firestore with relevance scores and metadata
+6. **Duplicate Prevention**: Content hashing prevents duplicate storage
+7. **Cycle Repeat**: Process repeats every hour (configurable)
+
+### **Rate Limiting & API Management**
+
+- **Gemini API**: 35-second delays (free tier: 2 requests/minute)
+- **Reddit API**: Respects Reddit's rate limits
+- **Firestore**: Efficient caching reduces database calls
+- **Error Handling**: Graceful fallbacks for API failures
+
+## 🎯 Use Cases
+
+### **For Content Creators**
+- Discover trending AI/tech topics automatically
+- Get pre-scored content leads (0-100 relevance)
+- Save time on content research and curation
+- Access diverse content sources in one place
+
+### **For AI Influencers**
+- Find high-engagement potential content
+- Identify controversial or debate-worthy topics
+- Discover educational and tutorial opportunities
+- Track industry trends and developments
+
+### **For Marketers**
+- Monitor competitor content and industry news
+- Identify content gaps and opportunities
+- Track engagement metrics and trending topics
+- Automate content discovery workflows
+
+## 🔧 API Requirements
+
+### **Google Gemini API**
+- **Purpose**: AI relevance scoring
+- **Rate Limit**: 2 requests/minute (free tier)
+- **Setup**: Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+### **Reddit API**
+- **Purpose**: Fetch Reddit posts
+- **Rate Limit**: Respects Reddit's API limits
+- **Setup**: Create app at [Reddit App Preferences](https://www.reddit.com/prefs/apps)
+
+### **Firebase/Firestore**
+- **Purpose**: Database storage
+- **Setup**: Download service account JSON from Firebase Console
+
+## 📈 Monitoring & Logging
+
+The system provides comprehensive logging:
+
+```
+🔄 Starting new curation cycle...
+📋 Loading configuration...
+📊 Configuration loaded: 1 RSS feeds, 1 Reddit subreddits
+📦 Creating RSS curator runner...
+▶️  Starting RSS curation cycle...
+🧠 Calculating relevance score for: AI News Article...
+📊 Relevance score calculated: 85/100 (Relevant: True)
+📝 Stored new content: AI News Article
+✅ RSS curation cycle completed
 ```
 
-### Validation Rules
+## 🚨 Troubleshooting
 
-1. **Required Fields**: All required fields must be present and non-empty
-2. **Date Format**: All dates must be in ISO 8601 format (UTC)
-3. **URLs**: All URL fields must be valid URLs
-4. **Hashes**: Content hash must be MD5 format (32 characters)
-5. **Arrays**: Tags, categories, and other arrays should not be empty
-6. **Language**: Language codes must follow ISO 639-1 standard
-7. **Word Count**: Must be positive integers
-8. **Confidence Scores**: Must be between 0.0 and 1.0
+### **Common Issues**
 
-## 🔄 Future Development Roadmap
+1. **Rate Limit Errors**: Increase `RATE_LIMIT_DELAY` in `relevance_scorer.py`
+2. **API Key Errors**: Check `.env` file and API key validity
+3. **Firestore Errors**: Verify `service_account.json` and permissions
+4. **Import Errors**: Run `pip install -r requirements.txt`
 
-### Phase 1: Web Scraping (Next)
-- [ ] Custom scraper architecture for individual websites
-- [ ] BeautifulSoup-based scrapers for static HTML sites
-- [ ] Selenium-based scrapers for JavaScript-heavy sites
-- [ ] Site-specific CSS selectors and extraction logic
-- [ ] Rate limiting and respectful scraping per site
-- [ ] **Note**: Each website requires its own custom scraper function
+### **Rate Limit Solutions**
 
-### Phase 2: Reddit Integration
-- [ ] Reddit API integration using PRAW
-- [ ] Subreddit monitoring and post fetching
-- [ ] Comment thread extraction
-- [ ] Reddit-specific metadata handling
+**Free Tier (2 requests/minute):**
+```python
+RATE_LIMIT_DELAY = 35  # 35 seconds between calls
+```
 
-### Phase 3: X/Twitter Integration
-- [ ] Twitter API v2 integration
-- [ ] Tweet and thread collection
-- [ ] User timeline monitoring
-- [ ] Twitter-specific engagement metrics
+**Paid Tier (1000 requests/minute):**
+```python
+RATE_LIMIT_DELAY = 1   # 1 second between calls
+```
 
-### Phase 4: Content Analysis
-- [ ] AI-powered sentiment analysis
-- [ ] Topic extraction and categorization
-- [ ] Content quality scoring
-- [ ] Duplicate detection across sources
+## 🔄 Future Development
 
-### Phase 5: Advanced Features
-- [ ] Multi-format content support (videos, images, audio)
-- [ ] Real-time content streaming
-- [ ] Advanced filtering and search
+### **Phase 1: Enhanced AI Features**
+- [ ] Custom system prompts for different content types
+- [ ] Batch processing for better rate limit utilization
+- [ ] Content summarization and key point extraction
+
+### **Phase 2: Additional Sources**
+- [ ] X/Twitter integration
+- [ ] LinkedIn article monitoring
+- [ ] YouTube video metadata extraction
+
+### **Phase 3: Advanced Analytics**
+- [ ] Content performance tracking
+- [ ] Trend analysis and prediction
 - [ ] Content recommendation engine
+
+## 📄 License
+
+This project is designed for content creation and research purposes. Please respect the terms of service of all integrated platforms (Reddit, Google Gemini, etc.).
+
+## 🤝 Contributing
+
+Contributions are welcome! Please ensure:
+- Code follows the existing modular architecture
+- New features include comprehensive logging
+- Rate limiting is respected for all APIs
+- Configuration remains centralized and flexible
