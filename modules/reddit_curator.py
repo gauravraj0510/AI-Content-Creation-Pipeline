@@ -30,8 +30,7 @@ from .relevance_scorer import RelevanceScorer
 # =============================================================================
 
 # Reddit API Configuration
-REDDIT_CLIENT_ID = "yEukh26aKGdo9475D1bsJA"
-REDDIT_CLIENT_SECRET = "Jce37q4ugIQXNlzhafo9r5QMVSBMjg"
+# Configuration is now handled in main.py
 REDDIT_USER_AGENT = "AI Content Creation Pipeline v1.0"
 
 # Firestore Configuration
@@ -52,11 +51,12 @@ class RedditPostCurator:
     def __init__(self, service_account_path: str = None, 
                  reddit_client_id: str = None, reddit_client_secret: str = None,
                  max_posts_per_subreddit: int = 5, time_filter: str = "day",
-                 gemini_api_key: str = None, enable_relevance_scoring: bool = True):
+                 gemini_api_key: str = None, enable_relevance_scoring: bool = True,
+                 system_prompt: str = None):
         """Initialize the Reddit Post Curator with Reddit API and Firestore connection."""
         self.service_account_path = service_account_path or DEFAULT_SERVICE_ACCOUNT_PATH
-        self.reddit_client_id = reddit_client_id or REDDIT_CLIENT_ID
-        self.reddit_client_secret = reddit_client_secret or REDDIT_CLIENT_SECRET
+        self.reddit_client_id = reddit_client_id
+        self.reddit_client_secret = reddit_client_secret
         self.user_agent = REDDIT_USER_AGENT
         self.max_posts_per_subreddit = max_posts_per_subreddit
         self.time_filter = time_filter
@@ -72,7 +72,7 @@ class RedditPostCurator:
         self.relevance_scorer = None
         if self.enable_relevance_scoring:
             try:
-                self.relevance_scorer = RelevanceScorer(api_key=gemini_api_key)
+                self.relevance_scorer = RelevanceScorer(api_key=gemini_api_key, system_prompt=system_prompt)
                 logger.info("✅ Relevance scoring enabled")
             except Exception as e:
                 logger.warning(f"⚠️  Relevance scoring disabled due to error: {e}")
@@ -524,18 +524,19 @@ class RedditCuratorRunner:
                  reddit_client_id: str = None, reddit_client_secret: str = None,
                  max_posts_per_subreddit: int = 5, time_filter: str = "day",
                  subreddit_names: List[str] = None, gemini_api_key: str = None,
-                 enable_relevance_scoring: bool = True):
+                 enable_relevance_scoring: bool = True, system_prompt: str = None):
         """Initialize the Reddit curator runner."""
         self.running = False
         self.curator = None
         self.service_account_path = service_account_path or DEFAULT_SERVICE_ACCOUNT_PATH
-        self.reddit_client_id = reddit_client_id or REDDIT_CLIENT_ID
-        self.reddit_client_secret = reddit_client_secret or REDDIT_CLIENT_SECRET
+        self.reddit_client_id = reddit_client_id
+        self.reddit_client_secret = reddit_client_secret
         self.max_posts_per_subreddit = max_posts_per_subreddit
         self.time_filter = time_filter
         self.subreddit_names = subreddit_names or []
         self.gemini_api_key = gemini_api_key
         self.enable_relevance_scoring = enable_relevance_scoring
+        self.system_prompt = system_prompt
     
     def _run_curation_cycle(self):
         """Run a single Reddit curation cycle."""
@@ -593,7 +594,8 @@ class RedditCuratorRunner:
                 max_posts_per_subreddit=self.max_posts_per_subreddit,
                 time_filter=self.time_filter,
                 gemini_api_key=self.gemini_api_key,
-                enable_relevance_scoring=self.enable_relevance_scoring
+                enable_relevance_scoring=self.enable_relevance_scoring,
+                system_prompt=self.system_prompt
             )
         except Exception as e:
             logger.error(f"❌ Failed to initialize Reddit curator: {e}")

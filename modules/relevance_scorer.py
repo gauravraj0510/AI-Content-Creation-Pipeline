@@ -34,82 +34,24 @@ GEMINI_MODEL = "gemini-2.5-pro"  # Latest supported model for content generation
 # Relevance Scoring Configuration
 DEFAULT_MIN_SCORE = 0  # Minimum score to consider content relevant
 DEFAULT_MAX_RETRIES = 3  # Maximum retries for API calls
-RATE_LIMIT_DELAY = 8  # Seconds to wait between API calls (15 calls/minute = 4 seconds)
+RATE_LIMIT_DELAY = 30  # Seconds to wait between API calls (15 calls/minute = 4 seconds)
 
-# System Prompt for AI Influencer Content Evaluation
-SYSTEM_PROMPT = """
-You are an expert content strategist specializing in AI and technology content for social media influencers and content creators. Your task is to evaluate content pieces and assign a relevance score from 0-100 for AI influencers and content creators.
+# Default System Prompt (fallback if none provided)
+DEFAULT_SYSTEM_PROMPT = """
+You are an expert content evaluator for AI influencers. Rate content from 0-100 based on relevance to AI/tech audiences and content creation potential.
 
-EVALUATION CRITERIA:
-
-1. **AI/TECH RELEVANCE (25 points)**
-   - Direct connection to AI, machine learning, or emerging technology
-   - Mentions of popular AI tools, companies, or trends
-   - Technical depth appropriate for general audience
-   - Innovation or breakthrough potential
-
-2. **ENGAGEMENT POTENTIAL (25 points)**
-   - Controversial or debate-worthy topics
-   - Practical applications or tutorials
-   - Personal stories or experiences
-   - Trending topics or current events
-   - Questions that spark discussion
-
-3. **CONTENT CREATION VALUE (25 points)**
-   - Clear narrative or story arc
-   - Visual content opportunities (screenshots, demos, comparisons)
-   - Educational or tutorial potential
-   - Multiple content formats possible (posts, videos, threads)
-   - Actionable insights or takeaways
-
-4. **AUDIENCE INTEREST (25 points)**
-   - Broad appeal to tech-savvy audiences
-   - Beginner-friendly explanations
-   - Industry impact or implications
-   - Future predictions or trends
-   - Problem-solving or productivity focus
-
-SCORING GUIDELINES:
-- 90-100: Exceptional content with viral potential, perfect for multiple content formats
-- 80-89: High-quality content with strong engagement potential
-- 70-79: Good content with solid value for content creation
-- 60-69: Decent content with some potential
-- 50-59: Average content, may work with good presentation
-- 40-49: Below average, limited content creation value
-- 30-39: Poor content, minimal engagement potential
-- 20-29: Very poor content, not suitable for influencers
-- 10-19: Extremely poor content, avoid
-- 0-9: Completely irrelevant or inappropriate
-
-CONTENT TYPES TO PRIORITIZE:
-- AI tool reviews and comparisons
-- Tutorial and how-to content
-- Industry news and analysis
-- Personal AI experiences
-- Future predictions and trends
-- Problem-solving with AI
-- Controversial AI topics
-- Beginner-friendly explanations
-
-CONTENT TYPES TO AVOID (LOW SCORES):
-- Pure technical documentation
-- Outdated information
-- Spam or promotional content
-- Off-topic content
-- Inappropriate or harmful content
-- Content without clear value proposition
-
-RESPONSE FORMAT:
-Return ONLY a numeric score from 0-100. No explanations, no additional text, just the number.
+Return ONLY a numeric score from 0-100. No explanations, just the number.
 
 Example: 85
 """
+
+# System prompt is now configured in main.py
 
 
 class RelevanceScorer:
     """Main class for evaluating content relevance using Google Gemini LLM."""
     
-    def __init__(self, api_key: str = None, model: str = None):
+    def __init__(self, api_key: str = None, model: str = None, system_prompt: str = None):
         """Initialize the Relevance Scorer with Gemini API."""
         self.api_key = api_key
         self.model_name = model or GEMINI_MODEL
@@ -118,6 +60,7 @@ class RelevanceScorer:
         self.max_retries = DEFAULT_MAX_RETRIES
         self.rate_limit_delay = RATE_LIMIT_DELAY
         self._api_working = False
+        self.system_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
         
         self._initialize_gemini()
     
@@ -218,7 +161,7 @@ class RelevanceScorer:
             self._last_api_call = time.time()
             
             # Prepare the prompt
-            prompt = f"{SYSTEM_PROMPT}\n\nCONTENT TO EVALUATE:\n\n{content_text}"
+            prompt = f"{self.system_prompt}\n\nCONTENT TO EVALUATE:\n\n{content_text}"
             
             # Generate response
             response = self.model.generate_content(prompt)
