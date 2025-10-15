@@ -242,15 +242,6 @@ class RedditPostCurator:
         # Remove duplicates and limit tags
         tags = list(set(tags))[:10]
         
-        # Determine content type
-        content_type = "text"
-        if post.is_video:
-            content_type = "video"
-        elif post.url and any(ext in post.url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif']):
-            content_type = "image"
-        elif post.url and not post.is_self:
-            content_type = "link"
-        
         post_data = {
             "id": content_hash,
             "title": post.title,
@@ -264,62 +255,11 @@ class RedditPostCurator:
             "source_domain": "reddit.com",
             "source_name": f"r/{subreddit_name}",
             "tags": tags,
-            "categories": ["Social Media", "Reddit"],
-            "language": "en",
-            "word_count": word_count,
-            "reading_time_minutes": reading_time_minutes,
             "content_hash": content_hash,
             "human_approved": False,
-            "metadata": {
-                "reddit_post": {
-                    "subreddit": subreddit_name,
-                    "post_id": post.id,
-                    "score": post.score,
-                    "upvote_ratio": post.upvote_ratio,
-                    "num_comments": post.num_comments,
-                    "flair": post.link_flair_text,
-                    "awards": [str(award) for award in post.all_awardings] if hasattr(post, 'all_awardings') else [],
-                    "is_self": post.is_self,
-                    "is_video": post.is_video,
-                    "is_nsfw": post.over_18,
-                    "scraped_at": datetime.now(timezone.utc)
-                }
-            },
-            "engagement": {
-                "likes": post.score,
-                "shares": 0,  # Reddit doesn't have shares
-                "comments": post.num_comments,
-                "views": 0  # Not available in Reddit API
-            },
-            "media": {
-                "images": [],
-                "videos": [],
-                "audio": []
-            },
-            "technical": {
-                "content_type": content_type,
-                "format": "markdown",
-                "encoding": "utf-8",
-                "last_modified": published_date
-            },
             "created_at": datetime.now(timezone.utc),
-            "processed_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc)
+            "processed_at": datetime.now(timezone.utc)
         }
-        
-        # Add media information if present
-        if post.url and not post.is_self:
-            if post.is_video:
-                post_data["media"]["videos"].append({
-                    "url": post.url,
-                    "type": "video"
-                })
-            elif any(ext in post.url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif']):
-                post_data["media"]["images"].append({
-                    "url": post.url,
-                    "alt_text": post.title,
-                    "caption": post.title
-                })
         
         return post_data
     
