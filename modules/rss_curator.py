@@ -28,6 +28,7 @@ from typing import List, Dict, Any, Optional
 import requests
 from urllib.parse import urlparse
 from pathlib import Path
+from .relevance_scorer import RelevanceScorer
 
 # =============================================================================
 # GLOBAL CONFIGURATION VARIABLES
@@ -57,7 +58,8 @@ logger = logging.getLogger(__name__)
 class RSSFeedCurator:
     """Main class for curating RSS feeds and storing content in Firestore."""
     
-    def __init__(self, service_account_path: str = None, max_items_per_feed: int = None):
+    def __init__(self, service_account_path: str = None, max_items_per_feed: int = None, 
+                 gemini_api_key: str = None, enable_relevance_scoring: bool = True):
         """Initialize the RSS Feed Curator with Firestore connection."""
         self.service_account_path = service_account_path or DEFAULT_SERVICE_ACCOUNT_PATH
         self.db = None
@@ -65,6 +67,18 @@ class RSSFeedCurator:
         self.RSS_METADATA_collection = DEFAULT_RSS_METADATA_COLLECTION
         self.max_items_per_feed = max_items_per_feed or DEFAULT_MAX_ITEMS_PER_FEED
         self.running = True
+        self.enable_relevance_scoring = enable_relevance_scoring
+        
+        # Initialize relevance scorer if enabled
+        self.relevance_scorer = None
+        if self.enable_relevance_scoring:
+            try:
+                self.relevance_scorer = RelevanceScorer(api_key=gemini_api_key)
+                logger.info("✅ Relevance scoring enabled")
+            except Exception as e:
+                logger.warning(f"⚠️  Relevance scoring disabled due to error: {e}")
+                self.enable_relevance_scoring = False
+        
         self._initialize_firestore()
     
     def _initialize_firestore(self):
@@ -191,8 +205,10 @@ class RSSFeedCurator:
             "description": entry.get('summary', entry.get('description', '')),
             "published": published_date,
             "author": entry.get('author', ''),
-            "feed_url": feed_url,
+            "source_type": "rss_feed",
+            "source_url": feed_url,
             "source_domain": domain,
+            "source_name": f"RSS Feed - {domain}",
             "tags": entry.get('tags', []),
             "content_hash": content_hash,
             "created_at": datetime.now(timezone.utc),
@@ -217,6 +233,23 @@ class RSSFeedCurator:
             if doc_ref.get().exists:
                 logger.debug(f"Content already exists: {content_data['title']}")
                 return False
+            
+            # Calculate relevance score if enabled
+            if self.enable_relevance_scoring and self.relevance_scorer:
+                try:
+                    logger.info(f"🧠 Calculating relevance score for: {content_data['title'][:50]}...")
+                    relevance_result = self.relevance_scorer.calculate_relevance_score(content_data)
+                    content_data.update(relevance_result)
+                    logger.info(f"📊 Relevance score: {relevance_result.get('relevance_score', 'N/A')}/100")
+                except Exception as e:
+                    logger.warning(f"⚠️  Failed to calculate relevance score: {e}")
+                    # Add default relevance data
+                    content_data.update({
+                        "relevance_score": -1,
+                        "is_relevant": False,
+                        "evaluation_timestamp": datetime.now(timezone.utc),
+                        "evaluation_model": "error"
+                    })
             
             # Store the content
             doc_ref.set(content_data)
@@ -391,13 +424,16 @@ class RSSCuratorRunner:
     """Main runner class that handles timing and RSS curator execution."""
     
     def __init__(self, service_account_path: str = None, 
-                 max_items_per_feed: int = None, feed_urls: List[str] = None):
+                 max_items_per_feed: int = None, feed_urls: List[str] = None,
+                 gemini_api_key: str = None, enable_relevance_scoring: bool = True):
         """Initialize the RSS curator runner."""
         self.running = False
         self.curator = None
         self.service_account_path = service_account_path or DEFAULT_SERVICE_ACCOUNT_PATH
         self.max_items_per_feed = max_items_per_feed or DEFAULT_MAX_ITEMS_PER_FEED
         self.feed_urls = feed_urls or []
+        self.gemini_api_key = gemini_api_key
+        self.enable_relevance_scoring = enable_relevance_scoring
     
     
     def _run_curation_cycle(self):
@@ -452,7 +488,9 @@ class RSSCuratorRunner:
         try:
             self.curator = RSSFeedCurator(
                 service_account_path=self.service_account_path,
-                max_items_per_feed=self.max_items_per_feed
+                max_items_per_feed=self.max_items_per_feed,
+                gemini_api_key=self.gemini_api_key,
+                enable_relevance_scoring=self.enable_relevance_scoring
             )
         except Exception as e:
             logger.error(f"❌ Failed to initialize RSS curator: {e}")
@@ -495,7 +533,9 @@ class RSSCuratorRunner:
         try:
             self.curator = RSSFeedCurator(
                 service_account_path=self.service_account_path,
-                max_items_per_feed=self.max_items_per_feed
+                max_items_per_feed=self.max_items_per_feed,
+                gemini_api_key=self.gemini_api_key,
+                enable_relevance_scoring=self.enable_relevance_scoring
             )
             self._run_curation_cycle()
         except Exception as e:

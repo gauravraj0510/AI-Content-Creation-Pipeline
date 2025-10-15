@@ -14,11 +14,11 @@ INTERVAL_SECONDS = 3600  # 1 hour = 3600 seconds
 
 # RSS Curator Configuration
 SERVICE_ACCOUNT_PATH = "service_account.json"
-MAX_ITEMS_PER_FEED = 5
+MAX_ITEMS_PER_FEED = 3
 
 # RSS Feed URLs
 RSS_FEED_URLS = [
-    # "https://techcrunch.com/category/artificial-intelligence/feed/",
+    "https://techcrunch.com/category/artificial-intelligence/feed/",
     # "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
 ]
 
@@ -29,8 +29,12 @@ REDDIT_SUBREDDITS = [
 ]
 
 # Reddit API Configuration
-REDDIT_MAX_POSTS_PER_SUBREDDIT = 5
+REDDIT_MAX_POSTS_PER_SUBREDDIT = 3
 REDDIT_TIME_FILTER = "hour"  # Options: "hour", "day", "week", "month", "year", "all"
+
+# Gemini AI Configuration (for relevance scoring)
+GEMINI_API_KEY = "AIzaSyAfTS3z899jUP8ozrqXR9h6dVkTlFINkQ0"  # Set your Gemini API key here
+ENABLE_RELEVANCE_SCORING = True  # Set to False to disable AI relevance scoring
 
 
 def main():
@@ -48,7 +52,9 @@ def main():
             rss_runner = RSSCuratorRunner(
                 service_account_path=SERVICE_ACCOUNT_PATH,
                 max_items_per_feed=MAX_ITEMS_PER_FEED,
-                feed_urls=RSS_FEED_URLS
+                feed_urls=RSS_FEED_URLS,
+                gemini_api_key=GEMINI_API_KEY,
+                enable_relevance_scoring=ENABLE_RELEVANCE_SCORING
             )
             
             # Run RSS curation cycle
@@ -62,7 +68,9 @@ def main():
                 service_account_path=SERVICE_ACCOUNT_PATH,
                 max_posts_per_subreddit=REDDIT_MAX_POSTS_PER_SUBREDDIT,
                 time_filter=REDDIT_TIME_FILTER,
-                subreddit_names=REDDIT_SUBREDDITS
+                subreddit_names=REDDIT_SUBREDDITS,
+                gemini_api_key=GEMINI_API_KEY,
+                enable_relevance_scoring=ENABLE_RELEVANCE_SCORING
             )
             
             # Run Reddit curation cycle
