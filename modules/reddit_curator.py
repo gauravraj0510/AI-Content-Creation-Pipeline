@@ -257,6 +257,7 @@ class RedditPostCurator:
             "tags": tags,
             "content_hash": content_hash,
             "human_approved": False,
+            "reel_generated": False,
             "created_at": datetime.now(timezone.utc),
             "processed_at": datetime.now(timezone.utc)
         }
