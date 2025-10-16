@@ -56,7 +56,7 @@ export default function RawIdeas() {
     end: new Date() // now
   });
   const [isLast24Hours, setIsLast24Hours] = useState(true);
-  const [expandedIdeas, setExpandedIdeas] = useState<Set<string>>(new Set());
+  const [expandedIdea, setExpandedIdea] = useState<string | null>(null);
   
   // Get minimum relevance score from environment variable
   const minRelevanceScore = parseInt(process.env.NEXT_PUBLIC_MIN_RELEVANCE_SCORE || '75', 10);
@@ -196,15 +196,7 @@ export default function RawIdeas() {
   };
 
   const toggleExpanded = (ideaId: string) => {
-    setExpandedIdeas(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(ideaId)) {
-        newSet.delete(ideaId);
-      } else {
-        newSet.add(ideaId);
-      }
-      return newSet;
-    });
+    setExpandedIdea(prev => prev === ideaId ? null : ideaId);
   };
 
   const getDisplayContent = (idea: RawIdea) => {
@@ -386,7 +378,7 @@ export default function RawIdeas() {
         ) : (
           <div className="grid gap-4">
             {rawIdeas.map((idea) => {
-              const isExpanded = expandedIdeas.has(idea.id);
+              const isExpanded = expandedIdea === idea.id;
               return (
                 <div key={idea.id} className="bg-gray-800/50 border border-gray-700 rounded-2xl hover:border-blue-500/50 transition-all duration-300">
                   {/* Accordion Header - Always Visible */}

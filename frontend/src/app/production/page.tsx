@@ -86,7 +86,7 @@ export default function ProductionPage() {
   const [editedReel, setEditedReel] = useState<Partial<ReelIdea>>({});
   const [statusFilter, setStatusFilter] = useState<ProductionStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -187,15 +187,7 @@ export default function ProductionPage() {
   };
 
   const toggleGroupExpansion = (rawIdeaId: string) => {
-    setExpandedGroups(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(rawIdeaId)) {
-        newSet.delete(rawIdeaId);
-      } else {
-        newSet.add(rawIdeaId);
-      }
-      return newSet;
-    });
+    setExpandedGroup(prev => prev === rawIdeaId ? null : rawIdeaId);
   };
 
   const formatDate = (dateInput: string | number | Date | { toDate: () => Date } | null | undefined) => {
@@ -421,7 +413,7 @@ export default function ProductionPage() {
                       </div>
                     </div>
                     <div className="ml-4 flex-shrink-0">
-                      {expandedGroups.has(group.rawIdea.id) ? (
+                      {expandedGroup === group.rawIdea.id ? (
                         <EyeOff className="h-5 w-5 text-gray-400" />
                       ) : (
                         <Eye className="h-5 w-5 text-gray-400" />
@@ -431,8 +423,8 @@ export default function ProductionPage() {
                 </div>
 
                 {/* Accordion Content */}
-                {expandedGroups.has(group.rawIdea.id) && (
-                  <div className="border-t border-gray-700">
+                {expandedGroup === group.rawIdea.id && (
+                  <div className="border-t border-gray-700 animate-in slide-in-from-top-2 duration-300">
                     <div className="p-4 sm:p-6 space-y-4">
                       {group.reels.map((reel) => {
                         const statusInfo = getStatusInfo(reel.production_status);

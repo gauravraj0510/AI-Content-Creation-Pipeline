@@ -74,7 +74,7 @@ export default function ReelIdeasPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [editingReel, setEditingReel] = useState<string | null>(null);
   const [editedReel, setEditedReel] = useState<Partial<ReelIdea>>({});
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [dateRange, setDateRange] = useState({
     start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
@@ -271,15 +271,7 @@ export default function ReelIdeasPage() {
   };
 
   const toggleGroupExpansion = (rawIdeaId: string) => {
-    setExpandedGroups(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(rawIdeaId)) {
-        newSet.delete(rawIdeaId);
-      } else {
-        newSet.add(rawIdeaId);
-      }
-      return newSet;
-    });
+    setExpandedGroup(prev => prev === rawIdeaId ? null : rawIdeaId);
   };
 
   const getScoreColor = (score: number) => {
@@ -462,17 +454,19 @@ export default function ReelIdeasPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center mb-2">
+                      <div className="flex items-center mb-2 flex-nowrap overflow-hidden">
                         <Sparkles className="h-5 w-5 text-yellow-400 mr-2 flex-shrink-0" />
-                        <h3 className="text-lg sm:text-xl font-semibold text-white truncate">
+                        <h3 className="text-lg sm:text-xl font-semibold text-white truncate flex-1 min-w-0">
                           {group.rawIdea.title}
                         </h3>
-                        <span className="ml-2 px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
-                          {group.reels.length} reel{group.reels.length !== 1 ? 's' : ''}
-                        </span>
-                        <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
-                          {group.reels.filter(reel => reel.production_approved).length} approved
-                        </span>
+                        <div className="flex items-center flex-shrink-0 ml-2 space-x-1">
+                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full whitespace-nowrap">
+                            {group.reels.length} reel{group.reels.length !== 1 ? 's' : ''}
+                          </span>
+                          <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full whitespace-nowrap">
+                            {group.reels.filter(reel => reel.production_approved).length} approved
+                          </span>
+                        </div>
                       </div>
                       
                       {/* Reel Titles Preview */}
@@ -514,7 +508,7 @@ export default function ReelIdeasPage() {
                       </div>
                     </div>
                     <div className="ml-4 flex-shrink-0">
-                      {expandedGroups.has(group.rawIdea.id) ? (
+                      {expandedGroup === group.rawIdea.id ? (
                         <EyeOff className="h-5 w-5 text-gray-400" />
                       ) : (
                         <Eye className="h-5 w-5 text-gray-400" />
@@ -524,8 +518,8 @@ export default function ReelIdeasPage() {
                 </div>
 
                 {/* Reels List */}
-                {expandedGroups.has(group.rawIdea.id) && (
-                  <div className="border-t border-gray-700">
+                {expandedGroup === group.rawIdea.id && (
+                  <div className="border-t border-gray-700 animate-in slide-in-from-top-2 duration-300">
                     <div className="p-4 sm:p-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {group.reels.map((reel) => (
