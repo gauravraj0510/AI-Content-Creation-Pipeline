@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from modules.rss_curator import RSSCuratorRunner
 from modules.reddit_curator import RedditCuratorRunner
+from modules.reel_generator import ReelGeneratorRunner
 from modules.helper import wait_for_next_cycle, signal_handler, get_shutdown_requested, logger
 from modules.config_manager import ConfigManager
 
@@ -24,6 +25,9 @@ REDDIT_TIME_FILTER = "hour"  # Options: "hour", "day", "week", "month", "year", 
 
 # Gemini AI Configuration (for relevance scoring)
 ENABLE_RELEVANCE_SCORING = True  # Set to False to disable AI relevance scoring
+
+# Reel Generator Configuration
+REELS_PER_IDEA = 2  # Number of reels to generate per approved raw idea
 
 # Load environment variables from .env file
 try:
@@ -95,6 +99,19 @@ def main():
             logger.info("▶️  Starting Reddit curation cycle...")
             reddit_runner.start()
             logger.info("✅ Reddit curation cycle completed")
+            
+            # Create Reel Generator runner
+            logger.info("📦 Creating Reel Generator runner...")
+            reel_runner = ReelGeneratorRunner(
+                service_account_path=SERVICE_ACCOUNT_PATH,
+                gemini_api_key=gemini_api_key,
+                reels_per_idea=REELS_PER_IDEA
+            )
+            
+            # Run Reel generation cycle
+            logger.info("▶️  Starting Reel generation cycle...")
+            reel_result = reel_runner.start()
+            logger.info("✅ Reel generation cycle completed")
             
             # Check if shutdown was requested during the cycle
             if get_shutdown_requested():

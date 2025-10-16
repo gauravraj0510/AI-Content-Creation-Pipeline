@@ -17,6 +17,7 @@ import google.generativeai as genai
 import logging
 import json
 import time
+import re
 from typing import Dict, Any, Optional
 from datetime import datetime, timezone
 
@@ -35,6 +36,7 @@ GEMINI_MODEL = "gemini-2.5-pro"  # Latest supported model for content generation
 DEFAULT_MIN_SCORE = 0  # Minimum score to consider content relevant
 DEFAULT_MAX_RETRIES = 3  # Maximum retries for API calls
 RATE_LIMIT_DELAY = 30  # Seconds to wait between API calls (15 calls/minute = 4 seconds)
+DEFAULT_RETRY_DELAY = 60  # Default delay in seconds if not specified in error
 
 # Default System Prompt (fallback if none provided)
 DEFAULT_SYSTEM_PROMPT = """
@@ -147,6 +149,121 @@ class RelevanceScorer:
         
         return content_text
     
+    def _extract_retry_delay(self, error_message: str) -> int:
+        """Extract retry delay from Gemini API error message."""
+        try:
+            # Look for retry_delay pattern in the error message
+            # Example: "Please retry in 49.867907441s" or "retry_delay { seconds: 49 }"
+            retry_patterns = [
+                r"Please retry in (\d+(?:\.\d+)?)s",  # "Please retry in 49.867907441s"
+                r"retry_delay\s*\{\s*seconds:\s*(\d+)",  # "retry_delay { seconds: 49 }"
+                r"seconds:\s*(\d+)",  # "seconds: 49"
+            ]
+            
+            for pattern in retry_patterns:
+                match = re.search(pattern, error_message, re.IGNORECASE)
+                if match:
+                    delay = float(match.group(1))
+                    # Add a small buffer (5 seconds) to the delay
+                    return int(delay) + 5
+            
+            # If no specific delay found, return default
+            logger.warning(f"⚠️  Could not extract retry delay from error message, using default: {DEFAULT_RETRY_DELAY}s")
+            return DEFAULT_RETRY_DELAY
+            
+        except Exception as e:
+            logger.warning(f"⚠️  Error extracting retry delay: {e}, using default: {DEFAULT_RETRY_DELAY}s")
+            return DEFAULT_RETRY_DELAY
+    
+    def _call_gemini_api_with_retry(self, content_text: str) -> Optional[int]:
+        """Call Gemini API with retry logic for rate limits."""
+        for attempt in range(self.max_retries):
+            try:
+                # Rate limiting - wait between API calls
+                if hasattr(self, '_last_api_call'):
+                    time_since_last = time.time() - self._last_api_call
+                    if time_since_last < self.rate_limit_delay:
+                        sleep_time = self.rate_limit_delay - time_since_last
+                        logger.debug(f"Rate limiting: waiting {sleep_time:.1f} seconds")
+                        time.sleep(sleep_time)
+                
+                self._last_api_call = time.time()
+                
+                # Prepare the prompt
+                prompt = f"{self.system_prompt}\n\nCONTENT TO EVALUATE:\n\n{content_text}"
+                
+                logger.info(f"🤖 Making Gemini API request for relevance scoring (attempt {attempt + 1}/{self.max_retries})")
+                
+                # Generate response
+                response = self.model.generate_content(prompt)
+                
+                # Mark API as working
+                self._api_working = True
+                
+                if not response.text:
+                    logger.warning(f"⚠️  Empty response from Gemini API on attempt {attempt + 1}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(10)  # Wait 10 seconds before retry
+                        continue
+                    else:
+                        logger.error("❌ All retry attempts failed - empty response")
+                        return None
+                
+                # Extract numeric score
+                score_text = response.text.strip()
+                
+                # Try to extract number from response
+                try:
+                    score = int(score_text)
+                    if 0 <= score <= 100:
+                        logger.info(f"✅ Gemini API request successful on attempt {attempt + 1}, score: {score}")
+                        return score
+                    else:
+                        logger.warning(f"Score out of range: {score}")
+                        if attempt < self.max_retries - 1:
+                            time.sleep(10)  # Wait 10 seconds before retry
+                            continue
+                        else:
+                            return None
+                except ValueError:
+                    # Try to extract number from text
+                    numbers = re.findall(r'\b(\d{1,3})\b', score_text)
+                    if numbers:
+                        score = int(numbers[0])
+                        if 0 <= score <= 100:
+                            logger.info(f"✅ Gemini API request successful on attempt {attempt + 1}, score: {score}")
+                            return score
+                    
+                    logger.warning(f"Could not parse score from response: {score_text}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(10)  # Wait 10 seconds before retry
+                        continue
+                    else:
+                        return None
+                        
+            except Exception as e:
+                error_message = str(e)
+                logger.warning(f"⚠️  Gemini API request failed on attempt {attempt + 1}: {error_message}")
+                
+                # Check if it's a rate limit error
+                if "quota" in error_message.lower() or "retry" in error_message.lower() or "rate" in error_message.lower():
+                    if attempt < self.max_retries - 1:
+                        # Extract retry delay from error message
+                        retry_delay = self._extract_retry_delay(error_message)
+                        logger.info(f"⏳ Rate limit hit, waiting {retry_delay} seconds before retry...")
+                        time.sleep(retry_delay)
+                        continue
+                    else:
+                        logger.error(f"❌ All retry attempts failed due to rate limits: {error_message}")
+                        return None
+                else:
+                    # Non-rate-limit error, don't retry
+                    logger.error(f"❌ Non-retryable error: {error_message}")
+                    return None
+        
+        logger.error("❌ All retry attempts exhausted")
+        return None
+    
     def _call_gemini_api(self, content_text: str) -> Optional[int]:
         """Call Gemini API to get relevance score with rate limiting."""
         try:
@@ -206,17 +323,8 @@ class RelevanceScorer:
             # Prepare minimal content for evaluation
             content_text = self._prepare_content_for_evaluation(content_data)
             
-            # Call Gemini API with retries
-            score = None
-            for attempt in range(self.max_retries):
-                logger.debug(f"Attempting to get relevance score (attempt {attempt + 1}/{self.max_retries})")
-                score = self._call_gemini_api(content_text)
-                
-                if score is not None:
-                    break
-                
-                if attempt < self.max_retries - 1:
-                    logger.warning(f"Retrying relevance score calculation (attempt {attempt + 2})")
+            # Call Gemini API with retry logic
+            score = self._call_gemini_api_with_retry(content_text)
             
             if score is None:
                 logger.error("Failed to get relevance score after all retries - using default fallback score")
