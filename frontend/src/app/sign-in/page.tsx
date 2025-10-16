@@ -32,8 +32,9 @@ export default function SignIn() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/raw-ideas'); // Redirect to raw-ideas after successful sign in
-    } catch (error: any) {
-      setError(getErrorMessage(error.code));
+    } catch (error: unknown) {
+      const errorCode = (error as { code?: string }).code || 'unknown';
+      setError(getErrorMessage(errorCode));
     } finally {
       setLoading(false);
     }
@@ -171,7 +172,7 @@ export default function SignIn() {
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-400">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <span className="text-blue-400">Contact your administrator</span>
             </p>
           </div>

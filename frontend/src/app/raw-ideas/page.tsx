@@ -163,9 +163,6 @@ export default function RawIdeas() {
     return 'text-orange-400';
   };
 
-  const handleDateRangeChange = (start: Date, end: Date) => {
-    setDateRange({ start, end });
-  };
 
   const handleTempDateRangeChange = (start: Date, end: Date) => {
     setTempDateRange({ start, end });

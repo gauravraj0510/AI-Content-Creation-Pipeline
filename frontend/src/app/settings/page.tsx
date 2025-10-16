@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { Plus, Trash2, Edit, Save, X, Settings, Database, MessageSquare } from 'lucide-react';
+import { getFirestore, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { Plus, Trash2, Edit, Save, X, Database, MessageSquare } from 'lucide-react';
 
 // Initialize Firebase (using the same config as the auth)
 const firebaseConfig = {
