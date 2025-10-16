@@ -8,8 +8,10 @@ A comprehensive Python application that automatically curates content from multi
 - **RSS Feed Processing**: Fetch and process RSS feeds with duplicate prevention
 - **Reddit Integration**: Fetch posts from multiple subreddits using Reddit API
 - **AI Relevance Scoring**: Google Gemini LLM evaluates content relevance (0-100 score)
+- **Reel Generation**: AI-powered reel concept generation from approved raw ideas
 - **Firestore Integration**: Centralized database storage with metadata tracking
 - **Configuration Management**: Dynamic configuration via Firestore and environment variables
+- **Smart Retry Logic**: Intelligent rate limit handling with accurate delay extraction
 - **Rate Limiting**: Built-in API rate limiting for free tier compliance
 - **Duplicate Prevention**: Smart content hashing prevents duplicate storage
 - **Modular Architecture**: Clean separation of concerns with reusable modules
@@ -27,17 +29,19 @@ A comprehensive Python application that automatically curates content from multi
 
 ```
 AI Content Creation Pipeline/
-├── main.py                           # Main entry point with configuration
-├── modules/
-│   ├── __init__.py                   # Package initialization
-│   ├── config_manager.py             # Centralized configuration management
-│   ├── rss_curator.py                # RSS feed processing module
-│   ├── reddit_curator.py             # Reddit post processing module
-│   ├── relevance_scorer.py           # AI relevance scoring with Gemini
-│   └── helper.py                     # Utility functions (timing, signals, etc.)
-├── service_account.json              # Firebase service account credentials
-├── requirements.txt                  # Python dependencies
-├── env_template.txt                  # Environment variables template
+├── backend/
+│   ├── main.py                       # Main entry point with configuration
+│   ├── modules/
+│   │   ├── __init__.py               # Package initialization
+│   │   ├── config_manager.py         # Centralized configuration management
+│   │   ├── rss_curator.py            # RSS feed processing module
+│   │   ├── reddit_curator.py         # Reddit post processing module
+│   │   ├── relevance_scorer.py       # AI relevance scoring with Gemini
+│   │   ├── reel_generator.py         # AI reel concept generation
+│   │   └── helper.py                 # Utility functions (timing, signals, etc.)
+│   ├── service_account.json          # Firebase service account credentials
+│   └── requirements.txt              # Python dependencies
+├── frontend/                         # Next.js frontend application
 └── README.md                         # This documentation
 ```
 
@@ -45,8 +49,16 @@ AI Content Creation Pipeline/
 
 ### 1. Install Dependencies
 
+**Backend:**
 ```bash
+cd backend
 pip install -r requirements.txt
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
 ```
 
 ### 2. Environment Configuration
@@ -83,8 +95,16 @@ python migrate_to_firestore.py
 
 ### 5. Start the Pipeline
 
+**Backend:**
 ```bash
+cd backend
 python main.py
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm run dev
 ```
 
 ## 🔧 Configuration
@@ -105,18 +125,27 @@ REDDIT_TIME_FILTER = "hour"  # Options: "hour", "day", "week", "month", "year", 
 
 # Gemini AI Configuration
 ENABLE_RELEVANCE_SCORING = True  # Set to False to disable AI relevance scoring
+
+# Reel Generator Configuration
+REELS_PER_IDEA = 2  # Number of reels to generate per approved raw idea
 ```
 
 ### **Firestore Configuration**
 
-The system uses two Firestore collections:
+The system uses three Firestore collections:
 
 #### **SETTINGS Collection**
 - **PROMPTS Document**: Contains `relevance_score_system_prompt` for AI evaluation
 - **SOURCES Document**: Contains `rss_feed_urls` and `reddit_subreddits` arrays
 
 #### **RAW_IDEAS Collection**
-Stores all curated content with relevance scores and metadata.
+Stores all curated content with relevance scores and metadata. Includes:
+- `human_approved`: Boolean flag for human approval
+- `reel_generated`: Boolean flag indicating if reels have been generated
+- `reel_generated_timestamp`: Timestamp when reels were generated
+
+#### **REEL_IDEAS Collection**
+Stores AI-generated reel concepts with comprehensive metadata.
 
 ## 🧠 AI Relevance Scoring
 
@@ -138,6 +167,38 @@ Stores all curated content with relevance scores and metadata.
 - **50-59**: Average content, may work with good presentation
 - **Below 50**: Poor content, limited value
 - **-1**: API failure (easy to detect in code)
+
+## 🎬 AI Reel Generation
+
+### **How It Works**
+1. **Approval Detection**: System finds raw ideas with `human_approved = true` and `reel_generated = false`
+2. **AI Generation**: Google Gemini LLM creates multiple reel concepts from each approved idea
+3. **Structured Output**: Each reel includes title, hook, concept, visuals, CTA, and metadata
+4. **Database Storage**: Generated reels saved to `REEL_IDEAS` collection
+5. **Status Tracking**: Original raw idea marked as `reel_generated = true`
+
+### **Reel JSON Schema**
+```json
+{
+  "reel_title": "Compelling title for the reel",
+  "production_status": "pending",
+  "production_approved": false,
+  "raw_idea_doc_id": "reference_to_original_idea",
+  "target_audience": "Specific target audience description",
+  "hook": "Opening hook to grab attention in first 3 seconds",
+  "concept": "Detailed concept and storyline",
+  "visuals": "Specific visual elements, transitions, and effects",
+  "cta": "Call-to-action for engagement",
+  "relevance_score": 85,
+  "source_url": "original_source_url",
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### **Configuration**
+- **Reels Per Idea**: Configurable via `REELS_PER_IDEA` (default: 2)
+- **Processing Frequency**: Runs hourly as part of main pipeline
+- **Smart Retry Logic**: Handles rate limits with accurate delay extraction
 
 ## 📊 Content Storage Format
 
@@ -217,26 +278,30 @@ Stores all curated content with relevance scores and metadata.
 3. **Reddit Processing**: Fetches latest posts from configured subreddits
 4. **AI Evaluation**: Each content piece gets scored by Gemini LLM
 5. **Storage**: Content stored in Firestore with relevance scores and metadata
-6. **Duplicate Prevention**: Content hashing prevents duplicate storage
-7. **Cycle Repeat**: Process repeats every hour (configurable)
+6. **Reel Generation**: AI generates reel concepts from human-approved raw ideas
+7. **Duplicate Prevention**: Content hashing prevents duplicate storage
+8. **Cycle Repeat**: Process repeats every hour (configurable)
 
 ### **Rate Limiting & API Management**
 
-- **Gemini API**: 35-second delays (free tier: 2 requests/minute)
+- **Smart Retry Logic**: Intelligent rate limit handling with accurate delay extraction
+- **Gemini API**: Automatic retry with extracted delays (free tier: 2 requests/minute)
 - **Reddit API**: Respects Reddit's rate limits
 - **Firestore**: Efficient caching reduces database calls
-- **Error Handling**: Graceful fallbacks for API failures
+- **Error Handling**: Graceful fallbacks for API failures with retry mechanisms
 
 ## 🎯 Use Cases
 
 ### **For Content Creators**
 - Discover trending AI/tech topics automatically
 - Get pre-scored content leads (0-100 relevance)
+- Generate AI-powered reel concepts from approved ideas
 - Save time on content research and curation
 - Access diverse content sources in one place
 
 ### **For AI Influencers**
 - Find high-engagement potential content
+- Generate viral reel concepts with hooks and CTAs
 - Identify controversial or debate-worthy topics
 - Discover educational and tutorial opportunities
 - Track industry trends and developments
@@ -277,27 +342,38 @@ The system provides comprehensive logging:
 📊 Relevance score calculated: 85/100 (Relevant: True)
 📝 Stored new content: AI News Article
 ✅ RSS curation cycle completed
+📦 Creating Reel Generator runner...
+▶️  Starting Reel generation cycle...
+🤖 Generating 2 reels for idea: AI News Article
+⏳ Rate limit hit, waiting 59 seconds before retry...
+✅ Gemini API request successful on attempt 2, score: 85
+✅ Successfully generated 2 reels
+✅ Reel generation cycle completed
 ```
 
 ## 🚨 Troubleshooting
 
 ### **Common Issues**
 
-1. **Rate Limit Errors**: Increase `RATE_LIMIT_DELAY` in `relevance_scorer.py`
+1. **Rate Limit Errors**: System now automatically handles with smart retry logic
 2. **API Key Errors**: Check `.env` file and API key validity
 3. **Firestore Errors**: Verify `service_account.json` and permissions
 4. **Import Errors**: Run `pip install -r requirements.txt`
+5. **Reel Generation Failures**: Check that raw ideas have `human_approved = true`
 
-### **Rate Limit Solutions**
+### **Smart Retry Logic**
 
-**Free Tier (2 requests/minute):**
-```python
-RATE_LIMIT_DELAY = 35  # 35 seconds between calls
+The system now automatically handles rate limits by:
+- **Extracting Delays**: Parses retry delays from error messages
+- **Accurate Timing**: Waits exactly as specified by the API
+- **Automatic Retries**: Up to 3 attempts with proper delays
+- **Error Classification**: Distinguishes retryable vs non-retryable errors
+
+**Example Error Handling:**
 ```
-
-**Paid Tier (1000 requests/minute):**
-```python
-RATE_LIMIT_DELAY = 1   # 1 second between calls
+Please retry in 54.375050434s. [violations {...}]
+⏳ Rate limit hit, waiting 59 seconds before retry...
+✅ Gemini API request successful on attempt 2
 ```
 
 ## 🔄 Future Development
