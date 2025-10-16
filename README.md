@@ -1,10 +1,12 @@
 # AI Content Creation Pipeline
 
-A comprehensive Python application that automatically curates content from multiple sources (RSS feeds and Reddit) and stores it in Firestore with AI-powered relevance scoring. Designed specifically for content creators and AI influencers to discover trending topics and high-quality content leads.
+A comprehensive full-stack application that automatically curates content from multiple sources (RSS feeds and Reddit) and stores it in Firestore with AI-powered relevance scoring. Features a modern Next.js frontend for content management and a Python backend for automated content curation. Designed specifically for content creators and AI influencers to discover trending topics and high-quality content leads.
 
 ## 🚀 Features
 
 ### ✅ **Currently Implemented**
+
+#### **Backend Features**
 - **RSS Feed Processing**: Fetch and process RSS feeds with duplicate prevention
 - **Reddit Integration**: Fetch posts from multiple subreddits using Reddit API
 - **AI Relevance Scoring**: Google Gemini LLM evaluates content relevance (0-100 score)
@@ -17,6 +19,17 @@ A comprehensive Python application that automatically curates content from multi
 - **Modular Architecture**: Clean separation of concerns with reusable modules
 - **Comprehensive Logging**: Detailed logging for monitoring and debugging
 - **Graceful Shutdown**: Handles Ctrl+C and system signals properly
+
+#### **Frontend Features**
+- **Authentication**: Firebase Authentication with protected routes
+- **Raw Ideas Management**: View, filter, and approve raw content ideas
+- **Reel Ideas Hub**: Browse and manage AI-generated reel concepts
+- **Production Pipeline**: Track reel production status and workflow
+- **Settings Dashboard**: Configure prompts, data sources, and system parameters
+- **Responsive Design**: Mobile-first design with Tailwind CSS
+- **Real-time Updates**: Live data synchronization with Firestore
+- **Advanced Filtering**: Date range filters and search functionality
+- **Interactive UI**: Accordion layouts, status badges, and action buttons
 
 ### 🔄 **Future Roadmap**
 - **X (Twitter) Integration**: Collect tweets and threads from X/Twitter
@@ -42,6 +55,21 @@ AI Content Creation Pipeline/
 │   ├── service_account.json          # Firebase service account credentials
 │   └── requirements.txt              # Python dependencies
 ├── frontend/                         # Next.js frontend application
+│   ├── src/
+│   │   ├── app/                      # Next.js 13+ app directory
+│   │   │   ├── raw-ideas/            # Raw ideas management page
+│   │   │   ├── reel-ideas/           # Reel ideas hub page
+│   │   │   ├── production/           # Production pipeline page
+│   │   │   ├── settings/             # Settings dashboard page
+│   │   │   ├── sign-in/              # Authentication page
+│   │   │   ├── layout.tsx            # Root layout component
+│   │   │   └── page.tsx              # Home page
+│   │   ├── components/               # Reusable React components
+│   │   │   └── Navbar.tsx            # Navigation component
+│   │   └── lib/                      # Utility libraries
+│   │       └── firebase.ts           # Firebase configuration
+│   ├── package.json                  # Node.js dependencies
+│   └── tailwind.config.js            # Tailwind CSS configuration
 └── README.md                         # This documentation
 ```
 
@@ -61,15 +89,27 @@ cd frontend
 npm install
 ```
 
-### 2. Environment Configuration
+### 2. Firebase Configuration
 
-Create a `.env` file from the template:
+**Backend:**
+Ensure your `service_account.json` file is in the backend directory. This file contains your Firebase credentials for Firestore access.
+
+**Frontend:**
+Create a `.env.local` file in the frontend directory:
 
 ```bash
-cp env_template.txt .env
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
-Edit `.env` with your API keys:
+### 3. Backend Environment Configuration
+
+Create a `.env` file in the backend directory:
 
 ```bash
 # Gemini AI API Key (for relevance scoring)
@@ -81,19 +121,7 @@ REDDIT_CLIENT_SECRET=your_reddit_client_secret_here
 REDDIT_USER_AGENT=AI Content Creation Pipeline v1.0
 ```
 
-### 3. Firebase Configuration
-
-Ensure your `service_account.json` file is in the project root. This file contains your Firebase credentials for Firestore access.
-
-### 4. Run Migration (Optional)
-
-Migrate hardcoded configurations to Firestore:
-
-```bash
-python migrate_to_firestore.py
-```
-
-### 5. Start the Pipeline
+### 4. Start the Application
 
 **Backend:**
 ```bash
@@ -106,6 +134,44 @@ python main.py
 cd frontend
 npm run dev
 ```
+
+The frontend will be available at `http://localhost:3000` and the backend will run continuously, processing content every hour.
+
+## 🖥️ Frontend Features
+
+### **Authentication & Navigation**
+- **Firebase Authentication**: Secure user authentication with email/password
+- **Protected Routes**: All content management pages require authentication
+- **Responsive Navbar**: Mobile-friendly navigation with gradient styling
+
+### **Raw Ideas Management (`/raw-ideas`)**
+- **Content Overview**: View all curated content with relevance scores
+- **Smart Filtering**: Filter by date range (last 24 hours, last 7 days, custom range)
+- **Approval System**: Toggle approval status for content to generate reels
+- **Score Visualization**: Color-coded relevance scores (75-80 red, 80-90 yellow, 90-100 green)
+- **Search Functionality**: Find specific content by title or description
+
+### **Reel Ideas Hub (`/reel-ideas`)**
+- **AI-Generated Concepts**: Browse reel concepts generated from approved raw ideas
+- **Grouped Display**: Reels grouped by their source raw idea
+- **Production Approval**: Toggle approval for production pipeline
+- **Date Filtering**: Filter based on raw idea processing date
+- **Grid Layout**: 2-column responsive grid for better content organization
+
+### **Production Pipeline (`/production`)**
+- **Production Management**: Track reel production status and workflow
+- **Status Tracking**: Manage status (pending, scripted, filmed, posted, discarded)
+- **Search & Filter**: Find specific reels by title or status
+- **Statistics Dashboard**: Overview of production metrics
+- **Accordion Interface**: Organized view with expandable sections
+
+### **Settings Dashboard (`/settings`)**
+- **Reel Generation Prompt**: Edit the AI prompt for generating reel concepts
+- **Relevance Scoring Prompt**: Configure how content is scored for relevance
+- **Data Sources Management**: Add/remove RSS feeds and Reddit subreddits
+- **Reels Per Idea**: Configure how many reels to generate per approved idea
+- **Individual Save Buttons**: Save each section independently
+- **Real-time Validation**: Prevent empty data sources and provide visual feedback
 
 ## 🔧 Configuration
 
@@ -135,17 +201,42 @@ REELS_PER_IDEA = 2  # Number of reels to generate per approved raw idea
 The system uses three Firestore collections:
 
 #### **SETTINGS Collection**
-- **PROMPTS Document**: Contains `relevance_score_system_prompt` for AI evaluation
-- **SOURCES Document**: Contains `rss_feed_urls` and `reddit_subreddits` arrays
+- **PROMPTS Document**: Contains:
+  - `reel_prompt`: Base prompt template for reel generation
+  - `relevance_score_system_prompt`: Prompt for AI relevance evaluation
+  - `reels_per_idea`: Number of reels to generate per approved idea
+  - `prompt_version`: Version tracking for prompt updates
+  - `last_updated`: Timestamp of last configuration update
+  - `is_active`: Boolean flag for configuration status
+
+- **SOURCES Document**: Contains:
+  - `rss_feed_urls`: Array of RSS feed URLs for content curation
+  - `reddit_subreddits`: Array of Reddit subreddit names
+  - `last_updated`: Timestamp of last source configuration update
 
 #### **RAW_IDEAS Collection**
 Stores all curated content with relevance scores and metadata. Includes:
-- `human_approved`: Boolean flag for human approval
+- `human_approved`: Boolean flag for human approval (toggles reel generation)
 - `reel_generated`: Boolean flag indicating if reels have been generated
 - `reel_generated_timestamp`: Timestamp when reels were generated
+- `relevance_score`: AI-calculated relevance score (0-100)
+- `processed_at`: Timestamp when content was processed
+- `created_at`: Timestamp when content was first stored
 
 #### **REEL_IDEAS Collection**
-Stores AI-generated reel concepts with comprehensive metadata.
+Stores AI-generated reel concepts with comprehensive metadata:
+- `reel_title`: Title of the generated reel concept
+- `production_status`: Current production status (pending, scripted, filmed, posted, discarded)
+- `production_approved`: Boolean flag for production approval
+- `raw_idea_doc_id`: Reference to the source raw idea
+- `target_audience`: Target audience description
+- `hook`: Opening hook for the reel
+- `concept`: Detailed concept and storyline
+- `visuals`: Visual elements and effects
+- `cta`: Call-to-action for engagement
+- `relevance_score`: Inherited from source raw idea
+- `source_url`: Original source URL
+- `timestamp`: Generation timestamp
 
 ## 🧠 AI Relevance Scoring
 
@@ -293,24 +384,32 @@ Stores AI-generated reel concepts with comprehensive metadata.
 ## 🎯 Use Cases
 
 ### **For Content Creators**
-- Discover trending AI/tech topics automatically
-- Get pre-scored content leads (0-100 relevance)
-- Generate AI-powered reel concepts from approved ideas
-- Save time on content research and curation
-- Access diverse content sources in one place
+- **Automated Discovery**: Discover trending AI/tech topics automatically from RSS feeds and Reddit
+- **Pre-scored Content**: Get content leads with AI-calculated relevance scores (0-100)
+- **AI Reel Generation**: Generate multiple reel concepts from approved ideas with hooks, CTAs, and visual descriptions
+- **Streamlined Workflow**: Manage content approval, reel generation, and production pipeline from one dashboard
+- **Time Savings**: Eliminate manual content research and curation processes
 
 ### **For AI Influencers**
-- Find high-engagement potential content
-- Generate viral reel concepts with hooks and CTAs
-- Identify controversial or debate-worthy topics
-- Discover educational and tutorial opportunities
-- Track industry trends and developments
+- **High-Engagement Content**: Find content with viral potential using AI scoring
+- **Production-Ready Concepts**: Get complete reel concepts with hooks, storylines, and visual elements
+- **Content Pipeline**: Track content from discovery to production with status management
+- **Trend Monitoring**: Stay ahead of industry trends with automated content curation
+- **Audience Targeting**: Get specific target audience descriptions for each piece of content
+
+### **For Content Teams**
+- **Collaborative Workflow**: Multiple team members can approve content and manage production
+- **Quality Control**: Review and approve content before reel generation
+- **Production Tracking**: Monitor reel production status from script to posting
+- **Configuration Management**: Customize AI prompts and data sources without code changes
+- **Performance Analytics**: Track content performance and production metrics
 
 ### **For Marketers**
-- Monitor competitor content and industry news
-- Identify content gaps and opportunities
-- Track engagement metrics and trending topics
-- Automate content discovery workflows
+- **Competitive Intelligence**: Monitor industry news and competitor content automatically
+- **Content Gap Analysis**: Identify trending topics and content opportunities
+- **Campaign Planning**: Generate multiple reel concepts for A/B testing
+- **ROI Tracking**: Monitor content performance from ideation to publication
+- **Scalable Operations**: Automate content discovery and initial concept generation
 
 ## 🔧 API Requirements
 
@@ -353,13 +452,35 @@ The system provides comprehensive logging:
 
 ## 🚨 Troubleshooting
 
-### **Common Issues**
+### **Backend Issues**
 
-1. **Rate Limit Errors**: System now automatically handles with smart retry logic
-2. **API Key Errors**: Check `.env` file and API key validity
+1. **Rate Limit Errors**: System automatically handles with smart retry logic
+2. **API Key Errors**: Check backend `.env` file and API key validity
 3. **Firestore Errors**: Verify `service_account.json` and permissions
 4. **Import Errors**: Run `pip install -r requirements.txt`
 5. **Reel Generation Failures**: Check that raw ideas have `human_approved = true`
+
+### **Frontend Issues**
+
+1. **Authentication Errors**: 
+   - Verify Firebase configuration in `.env.local`
+   - Check Firebase Authentication is enabled in Firebase Console
+   - Ensure email/password authentication is enabled
+
+2. **Data Not Loading**:
+   - Check Firestore security rules allow authenticated users
+   - Verify Firebase project ID matches in both frontend and backend
+   - Check browser console for specific error messages
+
+3. **Build Errors**:
+   - Run `npm install` to ensure all dependencies are installed
+   - Check for TypeScript errors in the console
+   - Verify all environment variables are set correctly
+
+4. **Settings Not Saving**:
+   - Check Firestore permissions for the SETTINGS collection
+   - Verify user is authenticated before accessing settings
+   - Check browser console for specific error messages
 
 ### **Smart Retry Logic**
 
@@ -379,19 +500,32 @@ Please retry in 54.375050434s. [violations {...}]
 ## 🔄 Future Development
 
 ### **Phase 1: Enhanced AI Features**
-- [ ] Custom system prompts for different content types
+- [x] Custom system prompts for different content types (Settings Dashboard)
+- [x] Dynamic prompt configuration via web interface
 - [ ] Batch processing for better rate limit utilization
 - [ ] Content summarization and key point extraction
+- [ ] Multi-language content support
 
 ### **Phase 2: Additional Sources**
 - [ ] X/Twitter integration
 - [ ] LinkedIn article monitoring
 - [ ] YouTube video metadata extraction
+- [ ] Instagram content monitoring
+- [ ] TikTok trend analysis
 
 ### **Phase 3: Advanced Analytics**
 - [ ] Content performance tracking
 - [ ] Trend analysis and prediction
 - [ ] Content recommendation engine
+- [ ] A/B testing for different prompts
+- [ ] Content engagement prediction
+
+### **Phase 4: Enhanced Frontend**
+- [ ] Real-time notifications for new content
+- [ ] Advanced content analytics dashboard
+- [ ] Team collaboration features
+- [ ] Content scheduling and publishing
+- [ ] Mobile app development
 
 ## 📄 License
 

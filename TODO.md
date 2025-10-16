@@ -1,2 +1,2 @@
 ## Backend:-
-- find a way to move Reel Prompt to DB and use prompt from DB in `reel_generator.py`
+- Cycle Gemini API keys to battle rate limits.
