@@ -179,3 +179,54 @@ Example: 85
             "cache_valid": self._is_cache_valid(),
             "cached_documents": list(self._cache.keys())
         }
+    
+    def get_reel_prompt(self) -> str:
+        """Get the reel generation prompt from Firestore."""
+        data = self._get_from_firestore("PROMPTS")
+        
+        if data and "reel_prompt" in data:
+            return data["reel_prompt"]
+        
+        # Default fallback
+        default_prompt = """You are an expert content creator specializing in viral social media reels. Create engaging reel concepts based on the following raw idea.
+
+REQUIREMENTS:
+1. Create exactly {reels_per_idea} different reel concepts
+2. Each reel should be unique and engaging
+3. Focus on viral potential and audience engagement
+4. Make content suitable for short-form video (15-60 seconds)
+5. Include specific visual elements and hooks
+6. Ensure each concept is distinct and creative while staying true to the original idea
+
+OUTPUT FORMAT:
+Return a JSON array with {reels_per_idea} objects. Each object must have these exact fields:
+
+{{
+  "reel_title": "Compelling title for the reel",
+  "production_status": "pending",
+  "production_approved": false,
+  "raw_idea_doc_id": "{raw_idea_doc_id}",
+  "target_audience": "Specific target audience description",
+  "hook": "Opening hook to grab attention in first 3 seconds",
+  "concept": "Detailed concept and storyline",
+  "visuals": "Specific visual elements, transitions, and effects",
+  "cta": "Call-to-action for engagement",
+  "relevance_score": {raw_idea_score},
+  "source_url": "{raw_idea_url}",
+  "timestamp": "{current_timestamp}"
+}}"""
+        logger.warning("⚠️ Using default reel generation prompt")
+        return default_prompt
+    
+    def get_reels_per_idea(self) -> int:
+        """Get the number of reels to generate per idea."""
+        data = self._get_from_firestore("PROMPTS")
+        
+        if data and "reels_per_idea" in data:
+            try:
+                return int(data["reels_per_idea"])
+            except (ValueError, TypeError):
+                logger.warning("⚠️ Invalid reels_per_idea value, using default")
+        
+        # Default fallback
+        return 2

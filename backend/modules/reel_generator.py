@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 import os
 import time
 import re
+from .config_manager import ConfigManager
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,9 @@ class ReelGenerator:
         self.gemini_api_key = gemini_api_key
         self.reels_per_idea = reels_per_idea or DEFAULT_REELS_PER_IDEA
         self.db = None
+        
+        # Initialize ConfigManager
+        self.config_manager = ConfigManager(service_account_path)
         
         self._initialize_firestore()
         self._initialize_gemini()
@@ -95,8 +99,46 @@ class ReelGenerator:
             return []
     
     def generate_reel_prompt(self, raw_idea: Dict[str, Any]) -> str:
-        """Generate a comprehensive prompt for creating reel ideas from raw idea."""
-        return f"""
+        """Generate prompt by combining system prompt with dynamic data."""
+        try:
+            # Get base prompt from database
+            base_prompt = self.config_manager.get_reel_prompt()
+            reels_per_idea = self.config_manager.get_reels_per_idea()
+            
+            # Update instance variable if different from config
+            if reels_per_idea != self.reels_per_idea:
+                logger.info(f"🔄 Updating reels_per_idea from {self.reels_per_idea} to {reels_per_idea}")
+                self.reels_per_idea = reels_per_idea
+            
+            # Create dynamic data section
+            dynamic_data = f"""RAW IDEA DETAILS:
+- Title: {raw_idea.get('title', 'N/A')}
+- Content: {raw_idea.get('content', 'N/A')}
+- Relevance Score: {raw_idea.get('relevance_score', 'N/A')}
+- Source URL: {raw_idea.get('source_url', 'N/A')}
+- Target Audience: {raw_idea.get('target_audience', 'AI/Tech enthusiasts')}"""
+            
+            # Combine dynamic data with base prompt
+            full_prompt = f"{dynamic_data}\n\n{base_prompt}"
+            
+            # Replace template variables
+            full_prompt = full_prompt.format(
+                reels_per_idea=reels_per_idea,
+                raw_idea_doc_id=raw_idea.get('doc_id', ''),
+                raw_idea_score=raw_idea.get('relevance_score', 0),
+                raw_idea_url=raw_idea.get('source_url', ''),
+                current_timestamp=datetime.now(timezone.utc).isoformat()
+            )
+            
+            logger.info(f"📝 Generated prompt using database template (reels_per_idea: {reels_per_idea})")
+            return full_prompt
+            
+        except Exception as e:
+            logger.error(f"❌ Error generating prompt from database: {e}")
+            logger.info("🔄 Falling back to hardcoded prompt")
+            
+            # Fallback to original hardcoded prompt
+            return f"""
 You are an expert content creator specializing in viral social media reels. Create {self.reels_per_idea} engaging reel concepts based on the following raw idea.
 
 RAW IDEA DETAILS:
