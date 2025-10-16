@@ -291,6 +291,9 @@ export default function ReelIdeasPage() {
                         <span className="ml-2 px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
                           {group.reels.length} reel{group.reels.length !== 1 ? 's' : ''}
                         </span>
+                        <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                          {group.reels.filter(reel => reel.production_approved).length} approved
+                        </span>
                       </div>
                       
                       {/* Reel Titles Preview */}
