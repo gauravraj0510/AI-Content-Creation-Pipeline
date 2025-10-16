@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { getFirestore, collection, query, orderBy, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, query, where, orderBy, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import Navbar from '@/components/Navbar';
 import { 
@@ -20,7 +20,9 @@ import {
   Target,
   ExternalLink,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Filter,
+  CheckCircle
 } from 'lucide-react';
 
 // Initialize Firebase
@@ -73,6 +75,16 @@ export default function ReelIdeasPage() {
   const [editingReel, setEditingReel] = useState<string | null>(null);
   const [editedReel, setEditedReel] = useState<Partial<ReelIdea>>({});
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+    end: new Date() // now
+  });
+  const [tempDateRange, setTempDateRange] = useState({
+    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+    end: new Date() // now
+  });
+  const [isLast7Days, setIsLast7Days] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -84,24 +96,28 @@ export default function ReelIdeasPage() {
     if (user) {
       fetchReelIdeas();
     }
-  }, [user]);
+  }, [user, dateRange]);
 
   const fetchReelIdeas = async () => {
     try {
       setLoadingData(true);
       
-      // Fetch reel ideas
-      const reelsQuery = query(collection(db, 'REEL_IDEAS'), orderBy('timestamp', 'desc'));
-      const reelsSnapshot = await getDocs(reelsQuery);
-      const reels: ReelIdea[] = reelsSnapshot.docs.map(doc => ({
+      // Fetch all reel ideas
+      const allReelsQuery = query(collection(db, 'REEL_IDEAS'), orderBy('timestamp', 'desc'));
+      const allReelsSnapshot = await getDocs(allReelsQuery);
+      const allReels: ReelIdea[] = allReelsSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as ReelIdea));
-
-      // Group reels by raw_idea_doc_id
-      const groupedMap = new Map<string, GroupedReels>();
       
-      for (const reel of reels) {
+      console.log('All reels found:', allReels.length);
+      console.log('Date range:', dateRange);
+      
+      // Group reels by raw_idea_doc_id and filter by raw idea's processed_at
+      const groupedMap = new Map<string, GroupedReels>();
+      let filteredReels: ReelIdea[] = [];
+      
+      for (const reel of allReels) {
         if (!groupedMap.has(reel.raw_idea_doc_id)) {
           // Fetch raw idea details
           try {
@@ -110,24 +126,52 @@ export default function ReelIdeasPage() {
             const rawIdea = rawIdeaDoc.docs.find(doc => doc.id === reel.raw_idea_doc_id);
             
             if (rawIdea) {
-              groupedMap.set(reel.raw_idea_doc_id, {
-                rawIdea: {
-                  id: rawIdea.id,
-                  ...rawIdea.data()
-                } as RawIdea,
-                reels: []
-              });
+              const rawIdeaData = rawIdea.data();
+              let processedAtDate: Date;
+              
+              // Handle different timestamp formats for processed_at
+              if (rawIdeaData.processed_at && typeof rawIdeaData.processed_at === 'object' && 'toDate' in rawIdeaData.processed_at) {
+                // Firestore Timestamp
+                processedAtDate = rawIdeaData.processed_at.toDate();
+              } else if (typeof rawIdeaData.processed_at === 'string') {
+                // String timestamp
+                processedAtDate = new Date(rawIdeaData.processed_at);
+              } else if (typeof rawIdeaData.processed_at === 'number') {
+                // Unix timestamp
+                processedAtDate = new Date(rawIdeaData.processed_at);
+              } else {
+                console.log('Unknown processed_at format for raw idea:', rawIdea.id, rawIdeaData.processed_at);
+                continue; // Skip this raw idea if we can't parse the date
+              }
+              
+              // Check if raw idea's processed_at is within date range
+              const isInRange = processedAtDate >= dateRange.start && processedAtDate <= dateRange.end;
+              console.log(`Raw idea ${rawIdea.id}: ${processedAtDate.toISOString()} - In range: ${isInRange}`);
+              
+              if (isInRange) {
+                groupedMap.set(reel.raw_idea_doc_id, {
+                  rawIdea: {
+                    id: rawIdea.id,
+                    ...rawIdeaData
+                  } as RawIdea,
+                  reels: []
+                });
+              }
             }
           } catch (error) {
             console.error('Error fetching raw idea:', error);
           }
         }
         
+        // Add reel to group if the raw idea is in date range
         const group = groupedMap.get(reel.raw_idea_doc_id);
         if (group) {
           group.reels.push(reel);
+          filteredReels.push(reel);
         }
       }
+      
+      console.log('Filtered reels by raw idea processed_at:', filteredReels.length);
 
       setGroupedReels(Array.from(groupedMap.values()));
     } catch (error) {
@@ -135,6 +179,48 @@ export default function ReelIdeasPage() {
     } finally {
       setLoadingData(false);
     }
+  };
+
+  const formatDateTime = (timestamp: Timestamp) => {
+    if (!timestamp) return 'Unknown';
+    const date = timestamp.toDate();
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDateForInput = (date: Date) => {
+    // Format date for datetime-local input (already in local timezone)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const handleTempDateRangeChange = (start: Date, end: Date) => {
+    setTempDateRange({ start, end });
+  };
+
+  const applyDateFilter = () => {
+    setDateRange(tempDateRange);
+    setIsLast7Days(false);
+    setShowDateFilter(false);
+  };
+
+  const resetToLast7Days = () => {
+    const newRange = {
+      start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      end: new Date()
+    };
+    setDateRange(newRange);
+    setTempDateRange(newRange);
+    setIsLast7Days(true);
   };
 
   const handleEdit = (reel: ReelIdea) => {
@@ -260,6 +346,101 @@ export default function ReelIdeasPage() {
           <p className="text-gray-400 text-lg">
             AI-generated reel concepts grouped by original raw ideas. Edit and approve reels for production.
           </p>
+        </div>
+
+        {/* Date Range Filter */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <button
+              onClick={() => setShowDateFilter(!showDateFilter)}
+              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-300 hover:text-white rounded-lg transition-all duration-200 text-sm sm:text-base"
+            >
+              <Filter className="h-4 w-4" />
+              <span>Filter by Date & Time</span>
+            </button>
+            
+            <button
+              onClick={resetToLast7Days}
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 text-sm sm:text-base ${
+                isLast7Days 
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border border-gray-600'
+              }`}
+            >
+              {isLast7Days && <CheckCircle className="h-4 w-4" />}
+              <span>Last 7 Days</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                setDateRange({
+                  start: new Date(0), // Start of epoch
+                  end: new Date() // Now
+                });
+                setIsLast7Days(false);
+              }}
+              className="px-3 sm:px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition-all duration-200 flex items-center space-x-2 text-sm sm:text-base"
+            >
+              <span>Show All</span>
+            </button>
+          </div>
+
+          {showDateFilter && (
+            <div className="mt-4 bg-gray-800/50 border border-gray-700 rounded-2xl p-4 sm:p-6 max-w-2xl mx-auto">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-center">Date Range Filter</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    Start Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formatDateForInput(tempDateRange.start)}
+                    onChange={(e) => {
+                      const localDate = new Date(e.target.value);
+                      handleTempDateRangeChange(localDate, tempDateRange.end);
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [color-scheme:dark]"
+                    style={{
+                      colorScheme: 'dark',
+                      backgroundColor: '#374151',
+                      color: 'white'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    End Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formatDateForInput(tempDateRange.end)}
+                    onChange={(e) => {
+                      const localDate = new Date(e.target.value);
+                      handleTempDateRangeChange(tempDateRange.start, localDate);
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [color-scheme:dark]"
+                    style={{
+                      colorScheme: 'dark',
+                      backgroundColor: '#374151',
+                      color: 'white'
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="mt-3 sm:mt-4 text-center">
+                <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4 px-2">
+                  Currently showing: {formatDateTime(Timestamp.fromDate(dateRange.start))} to {formatDateTime(Timestamp.fromDate(dateRange.end))}
+                </p>
+                <button
+                  onClick={applyDateFilter}
+                  className="px-4 sm:px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200 font-medium text-sm sm:text-base"
+                >
+                  Apply Filter
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {loadingData ? (
