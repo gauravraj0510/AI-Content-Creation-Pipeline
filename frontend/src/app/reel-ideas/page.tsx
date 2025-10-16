@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { getFirestore, collection, query, where, orderBy, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import Navbar from '@/components/Navbar';
 import { 
@@ -59,7 +59,7 @@ interface RawIdea {
   content: string;
   relevance_score: number;
   source_url: string;
-  created_at: any; // Can be string, Timestamp, or number
+  created_at: string | number | Date | { toDate: () => Date } | null | undefined;
 }
 
 interface GroupedReels {
@@ -92,13 +92,7 @@ export default function ReelIdeasPage() {
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
-    if (user) {
-      fetchReelIdeas();
-    }
-  }, [user, dateRange]);
-
-  const fetchReelIdeas = async () => {
+  const fetchReelIdeas = useCallback(async () => {
     try {
       setLoadingData(true);
       
@@ -115,7 +109,7 @@ export default function ReelIdeasPage() {
       
       // Group reels by raw_idea_doc_id and filter by raw idea's processed_at
       const groupedMap = new Map<string, GroupedReels>();
-      let filteredReels: ReelIdea[] = [];
+      const filteredReels: ReelIdea[] = [];
       
       for (const reel of allReels) {
         if (!groupedMap.has(reel.raw_idea_doc_id)) {
@@ -179,7 +173,13 @@ export default function ReelIdeasPage() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    if (user) {
+      fetchReelIdeas();
+    }
+  }, [user, dateRange, fetchReelIdeas]);
 
   const formatDateTime = (timestamp: Timestamp) => {
     if (!timestamp) return 'Unknown';
@@ -289,12 +289,12 @@ export default function ReelIdeasPage() {
     return 'bg-red-500/20 text-red-400 border-red-500/30';
   };
 
-  const formatDate = (dateInput: any) => {
+  const formatDate = (dateInput: string | number | Date | { toDate: () => Date } | null | undefined) => {
     try {
       let date;
       
       // Handle different date formats
-      if (dateInput && typeof dateInput === 'object' && dateInput.toDate) {
+      if (dateInput && typeof dateInput === 'object' && 'toDate' in dateInput) {
         // Firestore Timestamp
         date = dateInput.toDate();
       } else if (dateInput && typeof dateInput === 'string') {
