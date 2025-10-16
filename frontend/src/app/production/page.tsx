@@ -18,7 +18,6 @@ import {
   Target,
   ExternalLink,
   Video,
-  TrendingUp,
   Filter,
   Search,
   X,

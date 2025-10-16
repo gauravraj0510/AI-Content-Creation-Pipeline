@@ -158,9 +158,10 @@ export default function RawIdeas() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-400';
-    if (score >= 80) return 'text-yellow-400';
-    return 'text-orange-400';
+    if (score >= 90) return 'bg-green-500/20 text-green-400 border-green-500/30';
+    if (score >= 80) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+    if (score >= 75) return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+    return 'bg-red-500/20 text-red-400 border-red-500/30';
   };
 
 
@@ -411,7 +412,7 @@ export default function RawIdeas() {
                       
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:ml-4">
                         <div className="flex items-center space-x-2 sm:space-x-3">
-                          <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getScoreColor(idea.relevance_score)} bg-gray-700/50`}>
+                          <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${getScoreColor(idea.relevance_score)}`}>
                             {idea.relevance_score}%
                           </div>
                           

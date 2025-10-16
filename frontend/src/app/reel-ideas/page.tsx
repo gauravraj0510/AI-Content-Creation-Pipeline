@@ -282,6 +282,13 @@ export default function ReelIdeasPage() {
     });
   };
 
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'bg-green-500/20 text-green-400 border-green-500/30';
+    if (score >= 80) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+    if (score >= 75) return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+    return 'bg-red-500/20 text-red-400 border-red-500/30';
+  };
+
   const formatDate = (dateInput: any) => {
     try {
       let date;
@@ -338,14 +345,18 @@ export default function ReelIdeasPage() {
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <div className="flex items-center mb-4">
-            <Video className="h-8 w-8 text-blue-400 mr-3" />
-            <h1 className="text-3xl sm:text-4xl font-bold">Reel Ideas</h1>
-          </div>
-          <p className="text-gray-400 text-lg">
-            AI-generated reel concepts grouped by original raw ideas. Edit and approve reels for production.
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 px-2">
+            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Reel Ideas</span> Hub
+          </h1>
+          <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-3 sm:mb-4 px-2">
+            AI-generated reel concepts grouped by original raw ideas
           </p>
+          {groupedReels.length > 0 && (
+            <p className="text-xs sm:text-sm text-gray-400 px-2">
+              Showing {groupedReels.length} grouped reel concepts
+            </p>
+          )}
         </div>
 
         {/* Date Range Filter */}
@@ -369,19 +380,6 @@ export default function ReelIdeasPage() {
             >
               {isLast7Days && <CheckCircle className="h-4 w-4" />}
               <span>Last 7 Days</span>
-            </button>
-            
-            <button
-              onClick={() => {
-                setDateRange({
-                  start: new Date(0), // Start of epoch
-                  end: new Date() // Now
-                });
-                setIsLast7Days(false);
-              }}
-              className="px-3 sm:px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition-all duration-200 flex items-center space-x-2 text-sm sm:text-base"
-            >
-              <span>Show All</span>
             </button>
           </div>
 
@@ -528,43 +526,43 @@ export default function ReelIdeasPage() {
                 {/* Reels List */}
                 {expandedGroups.has(group.rawIdea.id) && (
                   <div className="border-t border-gray-700">
-                    <div className="p-4 sm:p-6 space-y-4">
-                      {group.reels.map((reel) => (
+                    <div className="p-4 sm:p-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {group.reels.map((reel) => (
                         <div key={reel.id} className="bg-gray-700/30 border border-gray-600 rounded-xl p-4 sm:p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center mb-2">
-                                <h4 className="text-lg font-semibold text-white truncate">
-                                  {editingReel === reel.id ? (
-                                    <input
-                                      type="text"
-                                      value={editedReel.reel_title || ''}
-                                      onChange={(e) => setEditedReel(prev => ({ ...prev, reel_title: e.target.value }))}
-                                      className="bg-gray-600 border border-gray-500 rounded px-3 py-1 text-white w-full"
-                                    />
-                                  ) : (
-                                    reel.reel_title
-                                  )}
-                                </h4>
-                            <div className="ml-3 flex items-center space-x-2">
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                reel.production_approved 
-                                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                                  : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                              }`}>
-                                {reel.production_approved ? '✓ Approved' : '⏳ Pending'}
-                              </span>
-                              <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">
-                                {reel.relevance_score}
-                              </span>
+                          {/* Title Row */}
+                          <div className="mb-3">
+                            <h4 className="text-lg font-semibold text-white">
+                              {editingReel === reel.id ? (
+                                <input
+                                  type="text"
+                                  value={editedReel.reel_title || ''}
+                                  onChange={(e) => setEditedReel(prev => ({ ...prev, reel_title: e.target.value }))}
+                                  className="bg-gray-600 border border-gray-500 rounded px-3 py-1 text-white w-full"
+                                />
+                              ) : (
+                                reel.reel_title
+                              )}
+                            </h4>
+                          </div>
+
+                          {/* Badges and Buttons Row */}
+                          <div className="flex flex-wrap items-center gap-2 mb-4">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              reel.production_approved 
+                                ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                                : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                            }`}>
+                              {reel.production_approved ? '✓ Approved' : '⏳ Pending'}
+                            </span>
+                            <span className={`px-2 py-1 text-xs rounded-full border ${getScoreColor(reel.relevance_score)}`}>
+                              {reel.relevance_score}
+                            </span>
+                            <div className="flex items-center text-xs text-gray-400">
+                              <Target className="h-3 w-3 mr-1" />
+                              {reel.target_audience}
                             </div>
-                              </div>
-                              <div className="flex items-center text-sm text-gray-400 mb-3">
-                                <Target className="h-4 w-4 mr-1" />
-                                {reel.target_audience}
-                              </div>
-                            </div>
-                            <div className="ml-4 flex items-center space-x-2">
+                            <div className="flex items-center space-x-2">
                               {reel.production_approved ? (
                                 <button
                                   onClick={() => toggleApproval(reel.id, reel.production_approved)}
@@ -664,7 +662,8 @@ export default function ReelIdeasPage() {
                             </div>
                           </div>
                         </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
