@@ -32,6 +32,7 @@ interface RawIdea {
   source_name: string;
   relevance_score: number;
   human_approved: boolean;
+  reel_generated?: boolean;
   created_at: Timestamp;
   published: Timestamp;
   processed_at: Timestamp;
@@ -225,6 +226,11 @@ export default function RawIdeas() {
     return description;
   };
 
+  const isReelGenerated = (idea: RawIdea) => {
+    // Check if reel_generated exists, if not assume false
+    return idea.reel_generated === true;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
@@ -387,7 +393,7 @@ export default function RawIdeas() {
                 <div key={idea.id} className="bg-gray-800/50 border border-gray-700 rounded-2xl hover:border-blue-500/50 transition-all duration-300">
                   {/* Accordion Header - Always Visible */}
                   <div 
-                    className="p-3 sm:p-4 cursor-pointer"
+                    className="relative p-3 sm:p-4 cursor-pointer"
                     onClick={() => toggleExpanded(idea.id)}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -406,7 +412,7 @@ export default function RawIdeas() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between sm:justify-end sm:space-x-3 sm:ml-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:ml-4">
                         <div className="flex items-center space-x-2 sm:space-x-3">
                           <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getScoreColor(idea.relevance_score)} bg-gray-700/50`}>
                             {idea.relevance_score}%
@@ -426,27 +432,35 @@ export default function RawIdeas() {
                           )}
                           
                           {idea.human_approved && (
-                            <div className="flex items-center space-x-1 sm:space-x-2">
+                            <>
                               <div className="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-green-400 bg-green-900/30">
-                                <span className="hidden sm:inline">Approved</span>
-                                <span className="sm:hidden">✓</span>
+                                Approved
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUnapprove(idea.id);
-                                }}
-                                className="flex items-center justify-center px-2 sm:px-3 py-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg transition-all duration-200 font-medium text-xs sm:text-sm"
-                              >
-                                <X className="h-3 w-3 mr-1" />
-                                <span className="hidden sm:inline">Unapprove</span>
-                                <span className="sm:hidden">✗</span>
-                              </button>
-                            </div>
+                              <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
+                                isReelGenerated(idea) 
+                                  ? 'text-purple-400 bg-purple-900/30' 
+                                  : 'text-orange-400 bg-orange-900/30'
+                              }`}>
+                                {isReelGenerated(idea) ? 'Reel Generated' : 'Reel Not Generated'}
+                              </div>
+                            </>
                           )}
                         </div>
                         
-                        <div className="p-1">
+                        {idea.human_approved && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnapprove(idea.id);
+                            }}
+                            className="flex items-center justify-center px-2 sm:px-3 py-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg transition-all duration-200 font-medium text-xs sm:text-sm"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Unapprove
+                          </button>
+                        )}
+                        
+                        <div className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto sm:ml-0">
                           {isExpanded ? (
                             <ChevronUp className="h-4 w-4 text-gray-400" />
                           ) : (
@@ -497,12 +511,21 @@ export default function RawIdeas() {
                             </button>
                           ) : (
                             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-                              <div className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-green-400 bg-green-900/30">
-                                ✓ Approved
+                              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 sm:gap-3">
+                                <div className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-green-400 bg-green-900/30">
+                                  ✓ Approved
+                                </div>
+                                <div className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium ${
+                                  isReelGenerated(idea) 
+                                    ? 'text-purple-400 bg-purple-900/30' 
+                                    : 'text-orange-400 bg-orange-900/30'
+                                }`}>
+                                  {isReelGenerated(idea) ? '🎬 Reel Generated' : '⏳ Reel Not Generated'}
+                                </div>
                               </div>
                               <button
                                 onClick={() => handleUnapprove(idea.id)}
-                                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg transition-all duration-200 font-medium text-sm sm:text-base"
+                                className="w-full sm:w-auto flex items-center justify-center px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg transition-all duration-200 font-medium text-sm sm:text-base"
                               >
                                 <X className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                                 Unapprove Content
