@@ -518,8 +518,10 @@ export default function ReelIdeasPage() {
                 </div>
 
                 {/* Reels List */}
-                {expandedGroup === group.rawIdea.id && (
-                  <div className="border-t border-gray-700 animate-in slide-in-from-top-2 duration-300">
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  expandedGroup === group.rawIdea.id ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+                }`}>
+                  <div className="border-t border-gray-700">
                     <div className="p-4 sm:p-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {group.reels.map((reel) => (
@@ -660,7 +662,7 @@ export default function ReelIdeasPage() {
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>

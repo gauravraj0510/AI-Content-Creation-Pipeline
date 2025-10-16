@@ -462,8 +462,8 @@ export default function RawIdeas() {
                   </div>
                   
                   {/* Accordion Content - Expandable */}
-                  <div className={`overflow-hidden transition-all duration-300 ${
-                    isExpanded ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'
+                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    isExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
                   }`}>
                     <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-gray-700/50">
                       <div className="pt-3 sm:pt-4">
