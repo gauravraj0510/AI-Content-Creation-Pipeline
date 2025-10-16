@@ -74,22 +74,22 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="flex items-center justify-center space-x-2 mb-4 hover:opacity-80 transition-opacity">
-            <Brain className="h-10 w-10 text-blue-400" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            <Brain className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400" />
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               ContentLeads
             </span>
           </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-gray-400">Sign in to your ContentLeads account</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-gray-400 text-sm sm:text-base">Sign in to your ContentLeads account</p>
         </div>
 
         {/* Sign In Form */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-8 backdrop-blur-sm">
+        <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 sm:p-8 backdrop-blur-sm">
           <form onSubmit={handleSignIn} className="space-y-6">
             {/* Email Field */}
             <div>
