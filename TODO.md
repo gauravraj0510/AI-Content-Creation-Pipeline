@@ -1,6 +1,6 @@
 ## Backend:-
 - Script which checks for all RAW_IDEAS which has `human_approved = true` and `reel_generated = false`
-- It will generate 3 reels and update `reel_generated = true`
+- It will generate 2 reels and update `reel_generated = true`
 - Each reel will have 2 status variables `production_approved = false` and `production_status = ""`
 
 ## Fronted:-
