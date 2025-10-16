@@ -175,11 +175,25 @@ class RedditPostCurator:
             logger.error(f"Error updating subreddit metadata for r/{subreddit_name}: {e}")
     
     def _is_new_content(self, post, last_processed: Optional[datetime]) -> bool:
-        """Check if Reddit post is new based on creation date."""
-        if not last_processed:
-            return True
-        
+        """Check if Reddit post is new based on creation date and time filter."""
         post_date = datetime.fromtimestamp(post.created_utc, tz=timezone.utc)
+        current_time = datetime.now(timezone.utc)
+        
+        # If no last processed time, check against time filter
+        if not last_processed:
+            # Apply time filter to ensure we only get recent posts
+            if self.time_filter == "hour":
+                time_threshold = current_time - timedelta(hours=1)
+            elif self.time_filter == "day":
+                time_threshold = current_time - timedelta(days=1)
+            elif self.time_filter == "week":
+                time_threshold = current_time - timedelta(weeks=1)
+            else:  # default to day
+                time_threshold = current_time - timedelta(days=1)
+            
+            return post_date > time_threshold
+        
+        # If we have last processed time, use that as reference
         return post_date > last_processed
     
     def _clean_text(self, text: str) -> str:
@@ -317,8 +331,8 @@ class RedditPostCurator:
             logger.info("   🔍 Fetching subreddit posts...")
             subreddit = self.reddit.subreddit(subreddit_name)
             
-            # Fetch hot posts with time filter
-            posts = list(subreddit.hot(limit=self.max_posts_per_subreddit * 2))  # Get more to filter
+            # Fetch new posts to get the latest content
+            posts = list(subreddit.new(limit=self.max_posts_per_subreddit * 3))  # Get more to filter
             
             if not posts:
                 logger.warning("   ❌ No posts found in subreddit")
@@ -336,6 +350,11 @@ class RedditPostCurator:
             logger.info(f"   📊 Subreddit: r/{subreddit_name}")
             logger.info(f"   📈 Total posts fetched: {len(posts)}")
             logger.info(f"   🎯 Processing latest: {min(len(posts), self.max_posts_per_subreddit)} posts")
+            logger.info(f"   ⏰ Time filter: {self.time_filter}")
+            if last_processed:
+                logger.info(f"   📅 Last processed: {last_processed.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+            else:
+                logger.info(f"   📅 Last processed: Never (first run)")
             logger.info("   ┌─ Processing posts:")
             
             # Process each post (limited to max_posts_per_subreddit)
@@ -343,6 +362,11 @@ class RedditPostCurator:
             for i, post in enumerate(posts, 1):
                 if processed_posts >= self.max_posts_per_subreddit:
                     break
+                
+                # Get post timestamp for debugging
+                post_date = datetime.fromtimestamp(post.created_utc, tz=timezone.utc)
+                time_ago = datetime.now(timezone.utc) - post_date
+                time_ago_str = f"{int(time_ago.total_seconds()//3600)}h {int((time_ago.total_seconds()%3600)//60)}m ago"
                 
                 # Check if this is new content
                 if self._is_new_content(post, last_processed):
@@ -353,17 +377,16 @@ class RedditPostCurator:
                     if self._store_content(post_data):
                         new_posts_count += 1
                         processed_posts += 1
-                        logger.info(f"   │  ✅ [{processed_posts:2d}/{self.max_posts_per_subreddit:2d}] NEW: {post_data['title'][:50]}{'...' if len(post_data['title']) > 50 else ''}")
+                        logger.info(f"   │  ✅ [{processed_posts:2d}/{self.max_posts_per_subreddit:2d}] NEW: {post_data['title'][:50]}{'...' if len(post_data['title']) > 50 else ''} ({time_ago_str})")
                         
                         # Update latest processed date
-                        post_date = post_data.get('published')
                         if post_date and (not latest_processed_date or post_date > latest_processed_date):
                             latest_processed_date = post_date
                     else:
-                        logger.info(f"   │  ⏭️  [{processed_posts+1:2d}/{self.max_posts_per_subreddit:2d}] SKIP: {post_data['title'][:50]}{'...' if len(post_data['title']) > 50 else ''} (duplicate)")
+                        logger.info(f"   │  ⏭️  [{processed_posts+1:2d}/{self.max_posts_per_subreddit:2d}] SKIP: {post_data['title'][:50]}{'...' if len(post_data['title']) > 50 else ''} (duplicate, {time_ago_str})")
                         processed_posts += 1
                 else:
-                    logger.info(f"   │  ⏭️  [{processed_posts+1:2d}/{self.max_posts_per_subreddit:2d}] SKIP: {post.title[:50]}{'...' if len(post.title) > 50 else ''} (old content)")
+                    logger.info(f"   │  ⏭️  [{processed_posts+1:2d}/{self.max_posts_per_subreddit:2d}] SKIP: {post.title[:50]}{'...' if len(post.title) > 50 else ''} (old content, {time_ago_str})")
                     processed_posts += 1
             
             logger.info("   └─ Post processing completed")
