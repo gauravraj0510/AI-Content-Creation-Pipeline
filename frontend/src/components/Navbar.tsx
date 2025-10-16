@@ -42,6 +42,12 @@ export default function Navbar() {
                 <Link href="/raw-ideas" className="px-3 py-2 text-sm bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-gray-300 hover:text-white hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg transition-all duration-200">
                   Raw Ideas
                 </Link>
+                <Link href="/reel-ideas" className="px-3 py-2 text-sm bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-gray-300 hover:text-white hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg transition-all duration-200">
+                  Reel Ideas
+                </Link>
+                <Link href="/production" className="px-3 py-2 text-sm bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-gray-300 hover:text-white hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg transition-all duration-200">
+                  Production
+                </Link>
                 <Link href="/settings" className="px-3 py-2 text-sm bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-gray-300 hover:text-white hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg transition-all duration-200">
                   Settings
                 </Link>
@@ -108,6 +114,20 @@ export default function Navbar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Raw Ideas
+                  </Link>
+                  <Link 
+                    href="/reel-ideas" 
+                    className="block px-3 py-2 text-gray-300 hover:text-white bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg transition-all duration-200"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Reel Ideas
+                  </Link>
+                  <Link 
+                    href="/production" 
+                    className="block px-3 py-2 text-gray-300 hover:text-white bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg transition-all duration-200"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Production
                   </Link>
                   <Link 
                     href="/settings" 
