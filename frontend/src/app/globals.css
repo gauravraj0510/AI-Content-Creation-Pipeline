@@ -8,6 +8,9 @@
   margin: 0;
   /* background-color: #000000; */
 }
+html{
+  background: #121b2a;
+}
 
 html,
 body {
