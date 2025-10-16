@@ -10,8 +10,6 @@ import Navbar from '@/components/Navbar';
 import { 
   Settings, 
   Save, 
-  Eye,
-  EyeOff,
   FileText,
   Hash,
   AlertCircle,
@@ -86,7 +84,6 @@ export default function SettingsPage() {
     sources: false,
     relevance: false
   });
-  const [showPreview, setShowPreview] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -416,18 +413,9 @@ Provide a JSON response with:
 
             {/* Reel Prompt Setting */}
             <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <FileText className="h-6 w-6 text-blue-400 mr-3" />
-                  <h2 className="text-xl font-semibold">Reel Generation Prompt</h2>
-                </div>
-                <button
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="flex items-center px-3 py-2 bg-gray-700/50 hover:bg-gray-700 border border-gray-600 rounded-lg transition-colors"
-                >
-                  {showPreview ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                  {showPreview ? 'Hide' : 'Show'} Preview
-                </button>
+              <div className="flex items-center mb-4">
+                <FileText className="h-6 w-6 text-blue-400 mr-3" />
+                <h2 className="text-xl font-semibold">Reel Generation Prompt</h2>
               </div>
               
               <p className="text-gray-400 mb-4">
@@ -471,37 +459,13 @@ Provide a JSON response with:
                 </button>
               </div>
 
-              {/* Preview */}
-              {showPreview && (
-                <div className="mt-4 p-4 bg-gray-700/30 border border-gray-600 rounded-lg">
-                  <h4 className="text-sm font-semibold text-gray-300 mb-2">Preview with Sample Data:</h4>
-                  <div className="text-xs text-gray-400 whitespace-pre-wrap bg-gray-800 p-3 rounded border">
-                    {editedSettings.reel_prompt
-                      .replace(/{reels_per_idea}/g, editedSettings.reels_per_idea.toString())
-                      .replace(/{raw_idea_doc_id}/g, 'sample123')
-                      .replace(/{raw_idea_score}/g, '85')
-                      .replace(/{raw_idea_url}/g, 'https://example.com')
-                      .replace(/{current_timestamp}/g, new Date().toISOString())
-                    }
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Relevance Score Prompt Setting */}
             <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <FileText className="h-6 w-6 text-green-400 mr-3" />
-                  <h2 className="text-xl font-semibold">Relevance Score Prompt</h2>
-                </div>
-                <button
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="flex items-center px-3 py-2 bg-gray-700/50 hover:bg-gray-700 border border-gray-600 rounded-lg transition-colors"
-                >
-                  {showPreview ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                  {showPreview ? 'Hide' : 'Show'} Preview
-                </button>
+              <div className="flex items-center mb-4">
+                <FileText className="h-6 w-6 text-green-400 mr-3" />
+                <h2 className="text-xl font-semibold">Relevance Score Prompt</h2>
               </div>
               
               <p className="text-gray-400 mb-4">
