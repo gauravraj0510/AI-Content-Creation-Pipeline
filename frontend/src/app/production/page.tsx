@@ -306,8 +306,8 @@ export default function ProductionPage() {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center mb-4">
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center mb-4">
             <Play className="h-8 w-8 text-green-400 mr-3" />
             <h1 className="text-3xl sm:text-4xl font-bold">Production Management</h1>
           </div>
@@ -315,9 +315,6 @@ export default function ProductionPage() {
             Manage approved reel ideas through the production pipeline. Track status and progress.
             <span className="block text-sm text-gray-500 mt-1">
               Showing all approved reels • Auto-refreshes when you return to this page
-            </span>
-            <span className="block text-sm text-blue-400 mt-1">
-              {productionReels.length} approved reels • Each reel shown separately
             </span>
           </p>
         </div>
