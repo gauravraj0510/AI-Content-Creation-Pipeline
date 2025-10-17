@@ -519,13 +519,13 @@ export default function ReelIdeasPage() {
 
                 {/* Reels List */}
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  expandedGroup === group.rawIdea.id ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+                  expandedGroup === group.rawIdea.id ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
                 }`}>
                   <div className="border-t border-gray-700">
-                    <div className="p-4 sm:p-6">
+                    <div className="p-4 sm:p-6 max-h-[700px] overflow-y-auto">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {group.reels.map((reel) => (
-                        <div key={reel.id} className="bg-gray-700/30 border border-gray-600 rounded-xl p-4 sm:p-6">
+                        <div key={reel.id} className="bg-gray-700/30 border border-gray-600 rounded-xl p-4 sm:p-6 max-h-[400px] overflow-y-auto">
                           {/* Title Row */}
                           <div className="mb-3">
                             <h4 className="text-lg font-semibold text-white">
@@ -617,7 +617,7 @@ export default function ReelIdeasPage() {
                                   className="bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white w-full h-20 resize-none"
                                 />
                               ) : (
-                                <p className="text-gray-400 text-sm">{reel.hook}</p>
+                                <p className="text-gray-400 text-sm whitespace-pre-wrap">{reel.hook}</p>
                               )}
                             </div>
                             <div>
@@ -629,7 +629,7 @@ export default function ReelIdeasPage() {
                                   className="bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white w-full h-20 resize-none"
                                 />
                               ) : (
-                                <p className="text-gray-400 text-sm">{reel.concept}</p>
+                                <p className="text-gray-400 text-sm whitespace-pre-wrap">{reel.concept}</p>
                               )}
                             </div>
                             <div>
@@ -641,7 +641,7 @@ export default function ReelIdeasPage() {
                                   className="bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white w-full h-20 resize-none"
                                 />
                               ) : (
-                                <p className="text-gray-400 text-sm">{reel.visuals}</p>
+                                <p className="text-gray-400 text-sm whitespace-pre-wrap">{reel.visuals}</p>
                               )}
                             </div>
                             <div>
@@ -653,7 +653,7 @@ export default function ReelIdeasPage() {
                                   className="bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white w-full h-20 resize-none"
                                 />
                               ) : (
-                                <p className="text-gray-400 text-sm">{reel.cta}</p>
+                                <p className="text-gray-400 text-sm whitespace-pre-wrap">{reel.cta}</p>
                               )}
                             </div>
                           </div>
