@@ -372,132 +372,6 @@ Provide a JSON response with:
           </div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Reels Per Idea Setting */}
-            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="flex items-center mb-4">
-                <Hash className="h-6 w-6 text-blue-400 mr-3" />
-                <h2 className="text-xl font-semibold">Reels Per Idea</h2>
-              </div>
-              <p className="text-gray-400 mb-4">
-                Number of reel concepts to generate for each raw idea
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={editedSettings.reels_per_idea}
-                    onChange={(e) => setEditedSettings(prev => ({ 
-                      ...prev, 
-                      reels_per_idea: parseInt(e.target.value) || 2 
-                    }))}
-                    className="w-20 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-400">reels per idea</span>
-                </div>
-                <button
-                  onClick={handleSavePrompts}
-                  disabled={!hasChanges.prompts || saving.prompts}
-                  className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 font-medium"
-                >
-                  {saving.prompts ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  {saving.prompts ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </div>
-
-            {/* Reel Prompt Setting */}
-            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="flex items-center mb-4">
-                <FileText className="h-6 w-6 text-blue-400 mr-3" />
-                <h2 className="text-xl font-semibold">Reel Generation Prompt</h2>
-              </div>
-              
-              <p className="text-gray-400 mb-4">
-                Base prompt template for generating reel concepts. Use template variables like {'{reels_per_idea}'}, {'{raw_idea_doc_id}'}, etc.
-              </p>
-
-              {/* Template Variables Guide */}
-              <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <h4 className="text-sm font-semibold text-blue-400 mb-2">Available Template Variables:</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-gray-300">
-                  <code className="bg-gray-700 px-2 py-1 rounded">{'{reels_per_idea}'}</code>
-                  <code className="bg-gray-700 px-2 py-1 rounded">{'{raw_idea_doc_id}'}</code>
-                  <code className="bg-gray-700 px-2 py-1 rounded">{'{raw_idea_score}'}</code>
-                  <code className="bg-gray-700 px-2 py-1 rounded">{'{raw_idea_url}'}</code>
-                  <code className="bg-gray-700 px-2 py-1 rounded">{'{current_timestamp}'}</code>
-                </div>
-              </div>
-
-              <textarea
-                value={editedSettings.reel_prompt}
-                onChange={(e) => setEditedSettings(prev => ({ 
-                  ...prev, 
-                  reel_prompt: e.target.value 
-                }))}
-                className="w-full h-96 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm"
-                placeholder="Enter your reel generation prompt template..."
-              />
-              
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={handleSavePrompts}
-                  disabled={!hasChanges.prompts || saving.prompts}
-                  className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 font-medium"
-                >
-                  {saving.prompts ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  {saving.prompts ? 'Saving...' : 'Save Reel Prompt'}
-                </button>
-              </div>
-
-            </div>
-
-            {/* Relevance Score Prompt Setting */}
-            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="flex items-center mb-4">
-                <FileText className="h-6 w-6 text-green-400 mr-3" />
-                <h2 className="text-xl font-semibold">Relevance Score Prompt</h2>
-              </div>
-              
-              <p className="text-gray-400 mb-4">
-                System prompt for evaluating content relevance and scoring (0-100). This prompt determines how raw ideas are scored for viral potential.
-              </p>
-
-              <textarea
-                value={editedRelevanceSettings.relevance_score_system_prompt}
-                onChange={(e) => setEditedRelevanceSettings(prev => ({ 
-                  ...prev, 
-                  relevance_score_system_prompt: e.target.value 
-                }))}
-                className="w-full h-64 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 resize-none font-mono text-sm"
-                placeholder="Enter your relevance scoring prompt..."
-              />
-              
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={handleSaveRelevance}
-                  disabled={!hasChanges.relevance || saving.relevance}
-                  className="flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 font-medium"
-                >
-                  {saving.relevance ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  {saving.relevance ? 'Saving...' : 'Save Relevance Prompt'}
-                </button>
-              </div>
-            </div>
-
             {/* Data Sources Settings */}
             <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
               <div className="flex items-center mb-4">
@@ -631,6 +505,133 @@ Provide a JSON response with:
                 </button>
               </div>
             </div>
+
+            {/* Relevance Score Prompt Setting */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
+              <div className="flex items-center mb-4">
+                <FileText className="h-6 w-6 text-green-400 mr-3" />
+                <h2 className="text-xl font-semibold">Relevance Score Prompt</h2>
+              </div>
+              
+              <p className="text-gray-400 mb-4">
+                System prompt for evaluating content relevance and scoring (0-100). This prompt determines how raw ideas are scored for viral potential.
+              </p>
+
+              <textarea
+                value={editedRelevanceSettings.relevance_score_system_prompt}
+                onChange={(e) => setEditedRelevanceSettings(prev => ({ 
+                  ...prev, 
+                  relevance_score_system_prompt: e.target.value 
+                }))}
+                className="w-full h-64 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 resize-none font-mono text-sm"
+                placeholder="Enter your relevance scoring prompt..."
+              />
+              
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleSaveRelevance}
+                  disabled={!hasChanges.relevance || saving.relevance}
+                  className="flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 font-medium"
+                >
+                  {saving.relevance ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {saving.relevance ? 'Saving...' : 'Save Relevance Prompt'}
+                </button>
+              </div>
+            </div>
+
+            {/* Reels Per Idea Setting */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
+              <div className="flex items-center mb-4">
+                <Hash className="h-6 w-6 text-blue-400 mr-3" />
+                <h2 className="text-xl font-semibold">Reels Per Idea</h2>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Number of reel concepts to generate for each raw idea
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={editedSettings.reels_per_idea}
+                    onChange={(e) => setEditedSettings(prev => ({ 
+                      ...prev, 
+                      reels_per_idea: parseInt(e.target.value) || 2 
+                    }))}
+                    className="w-20 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-400">reels per idea</span>
+                </div>
+                <button
+                  onClick={handleSavePrompts}
+                  disabled={!hasChanges.prompts || saving.prompts}
+                  className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 font-medium"
+                >
+                  {saving.prompts ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {saving.prompts ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            {/* Reel Prompt Setting */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
+              <div className="flex items-center mb-4">
+                <FileText className="h-6 w-6 text-blue-400 mr-3" />
+                <h2 className="text-xl font-semibold">Reel Generation Prompt</h2>
+              </div>
+              
+              <p className="text-gray-400 mb-4">
+                Base prompt template for generating reel concepts. Use template variables like {'{reels_per_idea}'}, {'{raw_idea_doc_id}'}, etc.
+              </p>
+
+              {/* Template Variables Guide */}
+              <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <h4 className="text-sm font-semibold text-blue-400 mb-2">Available Template Variables:</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-gray-300">
+                  <code className="bg-gray-700 px-2 py-1 rounded">{'{reels_per_idea}'}</code>
+                  <code className="bg-gray-700 px-2 py-1 rounded">{'{raw_idea_doc_id}'}</code>
+                  <code className="bg-gray-700 px-2 py-1 rounded">{'{raw_idea_score}'}</code>
+                  <code className="bg-gray-700 px-2 py-1 rounded">{'{raw_idea_url}'}</code>
+                  <code className="bg-gray-700 px-2 py-1 rounded">{'{current_timestamp}'}</code>
+                </div>
+              </div>
+
+              <textarea
+                value={editedSettings.reel_prompt}
+                onChange={(e) => setEditedSettings(prev => ({ 
+                  ...prev, 
+                  reel_prompt: e.target.value 
+                }))}
+                className="w-full h-96 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm"
+                placeholder="Enter your reel generation prompt template..."
+              />
+              
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleSavePrompts}
+                  disabled={!hasChanges.prompts || saving.prompts}
+                  className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 font-medium"
+                >
+                  {saving.prompts ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {saving.prompts ? 'Saving...' : 'Save Reel Prompt'}
+                </button>
+              </div>
+
+            </div>
+
 
           </div>
         )}
