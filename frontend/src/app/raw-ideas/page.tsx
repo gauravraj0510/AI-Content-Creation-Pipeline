@@ -56,6 +56,7 @@ export default function RawIdeas() {
     end: new Date() // now
   });
   const [isLast24Hours, setIsLast24Hours] = useState(true);
+  const [isLast7Days, setIsLast7Days] = useState(false);
   const [expandedIdea, setExpandedIdea] = useState<string | null>(null);
   
   // Get minimum relevance score from environment variable
@@ -172,6 +173,7 @@ export default function RawIdeas() {
   const applyDateFilter = () => {
     setDateRange(tempDateRange);
     setIsLast24Hours(false);
+    setIsLast7Days(false);
     setShowDateFilter(false);
   };
 
@@ -183,6 +185,18 @@ export default function RawIdeas() {
     setDateRange(newRange);
     setTempDateRange(newRange);
     setIsLast24Hours(true);
+    setIsLast7Days(false);
+  };
+
+  const resetToLast7Days = () => {
+    const newRange = {
+      start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      end: new Date()
+    };
+    setDateRange(newRange);
+    setTempDateRange(newRange);
+    setIsLast24Hours(false);
+    setIsLast7Days(true);
   };
 
   const formatDateForInput = (date: Date) => {
@@ -276,6 +290,18 @@ export default function RawIdeas() {
             >
               {isLast24Hours && <CheckCircle className="h-4 w-4" />}
               <span>Last 24 Hours</span>
+            </button>
+            
+            <button
+              onClick={resetToLast7Days}
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 text-sm sm:text-base ${
+                isLast7Days 
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white' 
+                  : 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 text-gray-300 hover:text-white'
+              }`}
+            >
+              {isLast7Days && <CheckCircle className="h-4 w-4" />}
+              <span>Last 7 Days</span>
             </button>
           </div>
 
