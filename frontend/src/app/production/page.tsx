@@ -100,28 +100,6 @@ export default function ProductionPage() {
     }
   }, [user]);
 
-  // Auto-refresh when page becomes visible (user switches back to tab)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && user) {
-        fetchProductionReels();
-      }
-    };
-
-    const handleFocus = () => {
-      if (user) {
-        fetchProductionReels();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [user]);
 
   const fetchProductionReels = async () => {
     try {
@@ -313,9 +291,6 @@ export default function ProductionPage() {
           </div>
           <p className="text-gray-400 text-lg">
             Manage approved reel ideas through the production pipeline. Track status and progress.
-            <span className="block text-sm text-gray-500 mt-1">
-              Showing all approved reels • Auto-refreshes when you return to this page
-            </span>
           </p>
         </div>
 
