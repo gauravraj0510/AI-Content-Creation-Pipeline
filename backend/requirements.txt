@@ -1,9 +1,11 @@
 feedparser==6.0.10
-google-cloud-firestore==2.13.1
+legacy-cgi>=1.0.0
+google-cloud-firestore>=2.22.0
 firebase-admin==6.4.0
 python-dateutil==2.8.2
 requests==2.31.0
 praw==7.8.1
 google-generativeai==0.8.3
 python-dotenv==1.0.0
+protobuf>=5.0.0,<6.0.0
 

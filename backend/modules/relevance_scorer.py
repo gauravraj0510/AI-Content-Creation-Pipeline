@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 # Google Gemini API Configuration
 # API key is now configured in main.py only
-GEMINI_MODEL = "gemini-2.5-pro"  # Latest supported model for content generation
+GEMINI_MODEL = "gemini-2.5-flash"  # Latest supported model for content generation
 
 # Relevance Scoring Configuration
 DEFAULT_MIN_SCORE = 0  # Minimum score to consider content relevant
@@ -83,7 +83,7 @@ class RelevanceScorer:
                 logger.warning(f"⚠️  Model {self.model_name} not available, trying alternative models...")
                 
                 # Try alternative models
-                alternative_models = ["gemini-2.5-pro", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"]
+                alternative_models = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"]
                 for alt_model in alternative_models:
                     try:
                         self.model = genai.GenerativeModel(alt_model)

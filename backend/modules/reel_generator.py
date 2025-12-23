@@ -67,7 +67,7 @@ class ReelGenerator:
         
         try:
             genai.configure(api_key=self.gemini_api_key)
-            self.model = genai.GenerativeModel('gemini-2.5-pro')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
             logger.info("✅ Reel Generator: Gemini AI initialized")
         except Exception as e:
             logger.error(f"❌ Reel Generator: Failed to initialize Gemini AI: {e}")

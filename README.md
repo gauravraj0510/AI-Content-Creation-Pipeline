@@ -315,7 +315,7 @@ Stores AI-generated reel concepts with comprehensive metadata:
   "relevance_score": 85,
   "is_relevant": true,
   "evaluation_timestamp": "2024-01-15T14:35:00Z",
-  "evaluation_model": "gemini-2.5-pro",
+  "evaluation_model": "gemini-2.5-flash",
   "evaluation_criteria": {
     "min_score_threshold": 0,
     "content_length": 1250,

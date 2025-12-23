@@ -26,9 +26,14 @@ import argparse
 import threading
 from typing import List, Dict, Any, Optional
 import requests
+import certifi
+import urllib3
 from urllib.parse import urlparse
 from pathlib import Path
 from .relevance_scorer import RelevanceScorer
+
+# Disable SSL warnings for unverified requests (only used as fallback)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # =============================================================================
 # GLOBAL CONFIGURATION VARIABLES
@@ -281,7 +286,26 @@ class RSSFeedCurator:
             
             # Parse the RSS feed
             logger.info("   🔍 Parsing RSS feed...")
-            feed = feedparser.parse(feed_url)
+            # Use requests to fetch feed content with proper SSL handling
+            try:
+                # Try with certifi certificates first
+                response = requests.get(feed_url, timeout=30, verify=certifi.where())
+                response.raise_for_status()
+                # Parse the feed content as a string
+                feed = feedparser.parse(response.content)
+            except requests.exceptions.SSLError as ssl_error:
+                logger.warning(f"   ⚠️  SSL certificate error, trying without verification: {ssl_error}")
+                # Fallback: try without SSL verification (less secure but may work)
+                try:
+                    response = requests.get(feed_url, timeout=30, verify=False)
+                    response.raise_for_status()
+                    feed = feedparser.parse(response.content)
+                except Exception as e:
+                    logger.error(f"   ❌ Failed to fetch feed: {e}")
+                    feed = feedparser.parse(feed_url)  # Last resort: let feedparser try
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"   ⚠️  Request error, using feedparser directly: {e}")
+                feed = feedparser.parse(feed_url)  # Fallback to direct parsing
             
             if feed.bozo:
                 logger.warning(f"   ⚠️  Feed parsing issues: {feed.bozo_exception}")
