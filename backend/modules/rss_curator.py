@@ -27,13 +27,9 @@ import threading
 from typing import List, Dict, Any, Optional
 import requests
 import certifi
-import urllib3
 from urllib.parse import urlparse
 from pathlib import Path
 from .relevance_scorer import RelevanceScorer
-
-# Disable SSL warnings for unverified requests (only used as fallback)
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # =============================================================================
 # GLOBAL CONFIGURATION VARIABLES
@@ -294,15 +290,16 @@ class RSSFeedCurator:
                 # Parse the feed content as a string
                 feed = feedparser.parse(response.content)
             except requests.exceptions.SSLError as ssl_error:
-                logger.warning(f"   ⚠️  SSL certificate error, trying without verification: {ssl_error}")
-                # Fallback: try without SSL verification (less secure but may work)
-                try:
-                    response = requests.get(feed_url, timeout=30, verify=False)
-                    response.raise_for_status()
-                    feed = feedparser.parse(response.content)
-                except Exception as e:
-                    logger.error(f"   ❌ Failed to fetch feed: {e}")
-                    feed = feedparser.parse(feed_url)  # Last resort: let feedparser try
+                # Never retry without certificate verification: an unverified
+                # body could be forged by anyone on the network path.
+                logger.error(f"   ❌ SSL certificate error, skipping feed: {ssl_error}")
+                return {
+                    "feed_url": feed_url,
+                    "status": "error",
+                    "error": f"SSL certificate verification failed: {ssl_error}",
+                    "new_items": 0,
+                    "total_items": 0
+                }
             except requests.exceptions.RequestException as e:
                 logger.warning(f"   ⚠️  Request error, using feedparser directly: {e}")
                 feed = feedparser.parse(feed_url)  # Fallback to direct parsing
